@@ -18,3 +18,4 @@ tmp
 .idea/*
 *.iml
 .ruby-version
+vendor
