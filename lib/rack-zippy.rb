@@ -19,7 +19,9 @@ module Rack
             status = 200
             headers = {
               'Content-Length' => ::File.size(file_path).to_s,
-              'Content-Type'   => Rack::Mime.mime_type(::File.extname(file_path))
+              'Content-Type'  => Rack::Mime.mime_type(::File.extname(file_path)),
+              'Last-Modified' => 'Mon, 10 Jan 2005 10:00:00 GMT',
+              'Cache-Control' => "public, max-age=#{max_age_in_secs(path_info)}"
             }
             response_body = [::File.read(file_path)]
             return [status, headers, response_body]
@@ -36,7 +38,28 @@ module Rack
 
       private
 
+      SECONDS_IN = {
+          :day => 24*60*60,
+          :month => 31*(24*60*60),
+          :year => 365*(24*60*60)
+      }.freeze
+
       STATIC_EXTENSION_REGEX = /\.(?:css|js|html|htm|txt|ico|png|jpg|jpeg|gif|pdf|svg|zip|gz|eps|psd|ai)\z/i
+
+      ASSETS_SUBDIR_REGEX = /\A\/assets\//
+
+      def max_age_in_secs(path_info)
+        case path_info
+          when ASSETS_SUBDIR_REGEX
+            max_age = SECONDS_IN[:year]
+          when '/favicon.ico'
+            max_age = SECONDS_IN[:month]
+          else
+            max_age = SECONDS_IN[:day]
+        end
+
+        return max_age
+      end
 
       def has_static_extension?(path)
         path =~ STATIC_EXTENSION_REGEX

@@ -19,6 +19,38 @@ class Rack::Zippy::AssetServerTest < Test::Unit::TestCase
     Rack::Zippy::AssetServer.new(rack_app)
   end
 
+  def test_responds_with_maximum_cache_headers_for_assets_subdir_requests
+    get '/assets/favicon.ico'
+    assert_cache_max_age :year
+    assert_cache_friendly_last_modified
+  end
+
+  def test_responds_with_month_long_cache_headers_for_root_favicon
+    get '/favicon.ico'
+    assert_cache_max_age :month
+    assert_cache_friendly_last_modified
+  end
+
+  def test_responds_with_day_long_cache_headers_for_robots_txt
+    get '/robots.txt'
+    assert_cache_max_age :day
+    assert_cache_friendly_last_modified
+  end
+
+  def test_responds_with_day_long_cache_headers_for_root_html_requests
+    get '/thanks.html'
+    assert_cache_max_age :day
+    assert_cache_friendly_last_modified
+  end
+
+  #def test_vary_accept_encoding_header_present_for_css_requests_by_non_gzip_clients
+  #  flunk
+  #end
+  #
+  #def test_vary_accept_encoding_header_present_for_js_requests_by_non_gzip_clients
+  #  flunk
+  #end
+
   def test_serves_html
     get '/thanks.html'
     assert_response_ok
@@ -85,6 +117,17 @@ class Rack::Zippy::AssetServerTest < Test::Unit::TestCase
   end
 
   private
+
+  DURATIONS_IN_SECS = {:year => 31536000, :month => 2678400, :day => 86400}.freeze
+
+  def assert_cache_max_age(duration)
+    assert_equal "public, max-age=#{DURATIONS_IN_SECS[duration]}", last_response.headers['cache-control']
+  end
+
+  # Browsers favour caching assets with older Last Modified dates IIRC
+  def assert_cache_friendly_last_modified
+    assert_equal 'Mon, 10 Jan 2005 10:00:00 GMT', last_response.headers['last-modified']
+  end
 
   def assert_underlying_app_responded
     assert_response_ok
