@@ -21,35 +21,55 @@ class Rack::Zippy::AssetServerTest < Test::Unit::TestCase
 
   def test_responds_with_maximum_cache_headers_for_assets_subdir_requests
     get '/assets/favicon.ico'
+    assert_response_ok
     assert_cache_max_age :year
     assert_cache_friendly_last_modified
   end
 
   def test_responds_with_month_long_cache_headers_for_root_favicon
     get '/favicon.ico'
+    assert_response_ok
     assert_cache_max_age :month
     assert_cache_friendly_last_modified
   end
 
   def test_responds_with_day_long_cache_headers_for_robots_txt
     get '/robots.txt'
+    assert_response_ok
     assert_cache_max_age :day
     assert_cache_friendly_last_modified
   end
 
   def test_responds_with_day_long_cache_headers_for_root_html_requests
     get '/thanks.html'
+    assert_response_ok
     assert_cache_max_age :day
     assert_cache_friendly_last_modified
   end
 
-  #def test_vary_accept_encoding_header_present_for_css_requests_by_non_gzip_clients
-  #  flunk
-  #end
-  #
-  #def test_vary_accept_encoding_header_present_for_js_requests_by_non_gzip_clients
-  #  flunk
-  #end
+  def test_max_cache_and_vary_accept_encoding_headers_present_for_css_requests_by_non_gzip_clients
+    get '/assets/application.css'
+    assert_response_ok
+    assert_cache_max_age :year
+    assert_cache_friendly_last_modified
+    assert_nil last_response.headers['content-encoding']
+    assert_vary_accept_encoding_header
+  end
+
+  def test_max_cache_and_vary_accept_encoding_headers_present_for_js_requests_by_non_gzip_clients
+    get '/assets/application.js'
+    assert_response_ok
+    assert_cache_max_age :year
+    assert_cache_friendly_last_modified
+    assert_nil last_response.headers['content-encoding']
+    assert_vary_accept_encoding_header
+  end
+
+  def test_vary_header_not_present_if_gzipped_asset_unavailable
+    get '/assets/rails.png'
+    assert_response_ok
+    assert_nil last_response.headers['vary']
+  end
 
   def test_throws_exception_if_path_contains_consecutive_periods
     e = assert_raises SecurityError do
@@ -126,6 +146,10 @@ class Rack::Zippy::AssetServerTest < Test::Unit::TestCase
   private
 
   DURATIONS_IN_SECS = {:year => 31536000, :month => 2678400, :day => 86400}.freeze
+
+  def assert_vary_accept_encoding_header
+    assert_equal 'Accept-Encoding', last_response.headers['vary']
+  end
 
   def assert_cache_max_age(duration)
     assert_equal "public, max-age=#{DURATIONS_IN_SECS[duration]}", last_response.headers['cache-control']

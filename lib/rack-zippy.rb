@@ -24,6 +24,8 @@ module Rack
               'Last-Modified' => 'Mon, 10 Jan 2005 10:00:00 GMT',
               'Cache-Control' => "public, max-age=#{max_age_in_secs(path_info)}"
             }
+            headers['Vary'] = 'Accept-Encoding' if available_gzipped?(file_path)
+
             response_body = [::File.read(file_path)]
             return [status, headers, response_body]
           else
@@ -48,6 +50,11 @@ module Rack
       STATIC_EXTENSION_REGEX = /\.(?:css|js|html|htm|txt|ico|png|jpg|jpeg|gif|pdf|svg|zip|gz|eps|psd|ai)\z/i
 
       ASSETS_SUBDIR_REGEX = /\A\/assets\//
+
+      def available_gzipped?(path)
+        gz_path = "#{path}.gz"
+        return ::File.exists?(gz_path)
+      end
 
       def max_age_in_secs(path_info)
         case path_info
