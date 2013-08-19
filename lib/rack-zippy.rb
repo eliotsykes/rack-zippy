@@ -11,6 +11,7 @@ module Rack
 
       def call(env)
         path_info = env['PATH_INFO']
+        assert_legal_path path_info
 
         if has_static_extension?(path_info)
           file_path = "#{@asset_root}#{path_info}"
@@ -63,6 +64,10 @@ module Rack
 
       def has_static_extension?(path)
         path =~ STATIC_EXTENSION_REGEX
+      end
+
+      def assert_legal_path(path_info)
+        raise SecurityError.new('Illegal path requested') if path_info.include?('..')
       end
 
     end

@@ -51,6 +51,13 @@ class Rack::Zippy::AssetServerTest < Test::Unit::TestCase
   #  flunk
   #end
 
+  def test_throws_exception_if_path_contains_consecutive_periods
+    e = assert_raises SecurityError do
+      get '/hello/../sensitive/file'
+    end
+    assert_equal 'Illegal path requested', e.message
+  end
+
   def test_serves_html
     get '/thanks.html'
     assert_response_ok
