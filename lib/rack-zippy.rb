@@ -14,26 +14,37 @@ module Rack
         assert_legal_path path_info
 
         if has_static_extension?(path_info)
+
           file_path = "#{@asset_root}#{path_info}"
 
           if ::File.exists?(file_path)
-            status = 200
             headers = {
-              'Content-Length' => ::File.size(file_path).to_s,
-              'Content-Type'  => Rack::Mime.mime_type(::File.extname(file_path)),
-              'Last-Modified' => 'Mon, 10 Jan 2005 10:00:00 GMT',
-              'Cache-Control' => "public, max-age=#{max_age_in_secs(path_info)}"
+                'Content-Type'  => Rack::Mime.mime_type(::File.extname(path_info)),
+                'Last-Modified' => 'Mon, 10 Jan 2005 10:00:00 GMT',
+                'Cache-Control' => "public, max-age=#{max_age_in_secs(path_info)}"
             }
-            headers['Vary'] = 'Accept-Encoding' if available_gzipped?(file_path)
 
+            gzipped_file_path = "#{file_path}.gz"
+            gzipped_file_present = ::File.exists?(gzipped_file_path)
+
+            if gzipped_file_present
+              headers['Vary'] = 'Accept-Encoding'
+
+              if client_accepts_gzip?(env)
+                file_path = gzipped_file_path
+                headers['Content-Encoding'] = 'gzip'
+              end
+            end
+
+            status = 200
+            headers['Content-Length'] = ::File.size(file_path).to_s
             response_body = [::File.read(file_path)]
-            return [status, headers, response_body]
           else
             status = 404
             headers = {}
             response_body = ['Not Found']
-            return [status, headers, response_body]
           end
+          return [status, headers, response_body]
         end
 
         @app.call(env)
@@ -51,10 +62,7 @@ module Rack
 
       ASSETS_SUBDIR_REGEX = /\A\/assets\//
 
-      def available_gzipped?(path)
-        gz_path = "#{path}.gz"
-        return ::File.exists?(gz_path)
-      end
+      ACCEPTS_GZIP_REGEX = /\bgzip\b/
 
       def max_age_in_secs(path_info)
         case path_info
@@ -67,6 +75,10 @@ module Rack
         end
 
         return max_age
+      end
+
+      def client_accepts_gzip?(rack_env)
+        rack_env['HTTP_ACCEPT_ENCODING'] =~ ACCEPTS_GZIP_REGEX
       end
 
       def has_static_extension?(path)

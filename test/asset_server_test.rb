@@ -19,6 +19,30 @@ class Rack::Zippy::AssetServerTest < Test::Unit::TestCase
     Rack::Zippy::AssetServer.new(rack_app)
   end
 
+  def test_responds_with_gzipped_css_to_gzip_capable_clients
+    params = {}
+    get '/assets/application.css', params, env_for_gzip_capable_client
+    assert_response_ok
+    assert_content_length 'public/assets/application.css.gz'
+    assert_content_type 'text/css'
+    assert_cache_max_age :year
+    assert_cache_friendly_last_modified
+    assert_equal 'gzip', last_response.headers['content-encoding']
+    assert_vary_accept_encoding_header
+  end
+
+  def test_responds_with_gzipped_js_to_gzip_capable_clients
+    params = {}
+    get '/assets/application.js', params, env_for_gzip_capable_client
+    assert_response_ok
+    assert_content_length 'public/assets/application.js.gz'
+    assert_content_type 'application/javascript'
+    assert_cache_max_age :year
+    assert_cache_friendly_last_modified
+    assert_equal 'gzip', last_response.headers['content-encoding']
+    assert_vary_accept_encoding_header
+  end
+
   def test_responds_with_maximum_cache_headers_for_assets_subdir_requests
     get '/assets/favicon.ico'
     assert_response_ok
@@ -50,6 +74,8 @@ class Rack::Zippy::AssetServerTest < Test::Unit::TestCase
   def test_max_cache_and_vary_accept_encoding_headers_present_for_css_requests_by_non_gzip_clients
     get '/assets/application.css'
     assert_response_ok
+    assert_content_length 'public/assets/application.css'
+    assert_content_type 'text/css'
     assert_cache_max_age :year
     assert_cache_friendly_last_modified
     assert_nil last_response.headers['content-encoding']
@@ -59,6 +85,8 @@ class Rack::Zippy::AssetServerTest < Test::Unit::TestCase
   def test_max_cache_and_vary_accept_encoding_headers_present_for_js_requests_by_non_gzip_clients
     get '/assets/application.js'
     assert_response_ok
+    assert_content_type 'application/javascript'
+    assert_content_length 'public/assets/application.js'
     assert_cache_max_age :year
     assert_cache_friendly_last_modified
     assert_nil last_response.headers['content-encoding']
@@ -146,6 +174,10 @@ class Rack::Zippy::AssetServerTest < Test::Unit::TestCase
   private
 
   DURATIONS_IN_SECS = {:year => 31536000, :month => 2678400, :day => 86400}.freeze
+
+  def env_for_gzip_capable_client
+    {'HTTP_ACCEPT_ENCODING' => 'deflate,gzip,sdch'}
+  end
 
   def assert_vary_accept_encoding_header
     assert_equal 'Accept-Encoding', last_response.headers['vary']
