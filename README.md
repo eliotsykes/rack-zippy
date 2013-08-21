@@ -2,9 +2,14 @@
 
 WORK IN PROGRESS, DO NOT USE!
 
-Rack middleware for serving static gzipped assets precompiled by the Rails asset pipeline into the public/assets directory. Use it
-on Heroku if you want to serve the precompiled gzipped assets to gzip-capable clients. By default, Rails + Heroku will not serve
-*.gz assets even though they are generated at deploy time.
+rack-zippy is a Rack middleware for serving static gzipped assets precompiled by the Rails asset pipeline into the public/assets directory. Use it
+on Heroku if you want to serve the precompiled gzipped assets to gzip-capable clients with sensible caching headers.
+
+By default, Rails + Heroku will not serve *.gz assets even though they are generated at deploy time.
+
+rack-zippy replaces the ActionDispatch::Static middleware used by Rails, which is not capable of serving the gzipped assets created by
+the `rake assets:precompile` task. rack-zippy will serve non-gzipped assets where they are not available or not supported by the
+requesting client.
 
 ## Installation
 
@@ -16,9 +21,14 @@ And then execute:
 
     $ bundle
 
+Add this line to config/application.rb:
+
+    config.middleware.swap(ActionDispatch::Static, Rack::Zippy::AssetServer)
+
 ## Usage
 
-TODO: Write usage instructions here
+Follow the installation instruction above and rack-zippy will serve any static assets, including gzipped assets, from your
+application's public/ directory and will respond with sensible caching headers.
 
 ## Contributing
 
