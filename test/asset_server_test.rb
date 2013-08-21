@@ -5,6 +5,7 @@ class Rack::Zippy::AssetServerTest < Test::Unit::TestCase
 
   def setup
     ensure_correct_working_directory
+    ::Rails.configuration.assets.compile = false
   end
 
   def teardown
@@ -17,6 +18,41 @@ class Rack::Zippy::AssetServerTest < Test::Unit::TestCase
     status = 200
     rack_app = lambda { |env| [status, headers, response] }
     Rack::Zippy::AssetServer.new(rack_app)
+  end
+
+  def test_does_not_serve_assets_subdir_request_when_assets_compile_enabled
+    ::Rails.configuration.assets.compile = true
+    get '/assets/application.css'
+    assert_response_ok
+    assert_equal 'Up above the streets and houses', last_response.body
+  end
+
+  def test_serve_returns_true_if_request_has_static_extension
+    assert app.send(:serve?, '/about.html')
+  end
+
+  def test_serve_returns_false_if_request_does_not_have_static_extension
+    assert !app.send(:serve?, '/about')
+  end
+
+  def test_serve_returns_true_for_assets_subdir_request_when_assets_compile_disabled
+    assert app.send(:serve?, '/assets/application.css')
+  end
+
+  def test_serve_returns_false_for_assets_subdir_request_when_assets_compile_enabled
+    ::Rails.configuration.assets.compile = true
+    assert !app.send(:serve?, '/assets/application.css')
+  end
+
+  def test_should_assets_be_compiled_already_returns_false_if_assets_compile_enabled
+    ::Rails.configuration.assets.compile = true
+    assert ::Rails.configuration.assets.compile
+    assert !app.send(:should_assets_be_compiled_already?)
+  end
+
+  def test_should_assets_be_compiled_already_returns_true_if_assets_compile_disabled
+    assert !::Rails.configuration.assets.compile
+    assert app.send(:should_assets_be_compiled_already?)
   end
 
   def test_responds_with_gzipped_css_to_gzip_capable_clients
@@ -194,7 +230,7 @@ class Rack::Zippy::AssetServerTest < Test::Unit::TestCase
 
   def assert_underlying_app_responded
     assert_response_ok
-    assert 'Up above the streets and houses', last_response.body
+    assert_equal 'Up above the streets and houses', last_response.body
   end
 
   def assert_response_ok

@@ -13,7 +13,7 @@ module Rack
         path_info = env['PATH_INFO']
         assert_legal_path path_info
 
-        if has_static_extension?(path_info)
+        if serve?(path_info)
 
           file_path = "#{@asset_root}#{path_info}"
 
@@ -60,13 +60,25 @@ module Rack
 
       STATIC_EXTENSION_REGEX = /\.(?:css|js|html|htm|txt|ico|png|jpg|jpeg|gif|pdf|svg|zip|gz|eps|psd|ai)\z/i
 
-      ASSETS_SUBDIR_REGEX = /\A\/assets\//
+      PRECOMPILED_ASSETS_SUBDIR_REGEX = /\A\/assets\//
 
       ACCEPTS_GZIP_REGEX = /\bgzip\b/
 
+      def serve?(path_info)
+        is_compilable_asset = (path_info =~ PRECOMPILED_ASSETS_SUBDIR_REGEX)
+        if is_compilable_asset
+          return should_assets_be_compiled_already?
+        end
+        return has_static_extension?(path_info)
+      end
+
+      def should_assets_be_compiled_already?
+        !::Rails.configuration.assets.compile
+      end
+
       def max_age_in_secs(path_info)
         case path_info
-          when ASSETS_SUBDIR_REGEX
+          when PRECOMPILED_ASSETS_SUBDIR_REGEX
             max_age = SECONDS_IN[:year]
           when '/favicon.ico'
             max_age = SECONDS_IN[:month]
