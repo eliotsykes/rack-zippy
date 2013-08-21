@@ -64,6 +64,8 @@ module Rack
 
       ACCEPTS_GZIP_REGEX = /\bgzip\b/
 
+      ILLEGAL_PATH_REGEX = /(\.\.|\/\.)/
+
       def serve?(path_info)
         is_compilable_asset = (path_info =~ PRECOMPILED_ASSETS_SUBDIR_REGEX)
         if is_compilable_asset
@@ -98,7 +100,7 @@ module Rack
       end
 
       def assert_legal_path(path_info)
-        raise SecurityError.new('Illegal path requested') if path_info.include?('..')
+        raise SecurityError.new('Illegal path requested') if path_info =~ ILLEGAL_PATH_REGEX
       end
 
     end

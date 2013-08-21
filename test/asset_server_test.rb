@@ -135,11 +135,29 @@ class Rack::Zippy::AssetServerTest < Test::Unit::TestCase
     assert_nil last_response.headers['vary']
   end
 
-  def test_throws_exception_if_path_contains_consecutive_periods
+  def assert_raises_illegal_path_error(path)
     e = assert_raises SecurityError do
-      get '/hello/../sensitive/file'
+      get path
     end
     assert_equal 'Illegal path requested', e.message
+  end
+
+  def test_throws_exception_if_path_contains_hidden_dir
+    paths = ['.confidential/secret-plans.pdf', '/.you-aint-seen-me/index.html', '/nothing/.to/see/here.jpg']
+    paths.each do |path|
+      assert_raises_illegal_path_error path
+    end
+  end
+
+  def test_throws_exception_if_path_ends_with_hidden_file
+    hidden_files = ['.htaccess', '/.top-secret', '/assets/.shhh']
+    hidden_files.each do |path|
+      assert_raises_illegal_path_error path
+    end
+  end
+
+  def test_throws_exception_if_path_contains_consecutive_periods
+    assert_raises_illegal_path_error '/hello/../sensitive/file'
   end
 
   def test_serves_html
