@@ -25,7 +25,7 @@ Add this line to config/application.rb:
 
 ## Usage
 
-Follow the installation instruction above and rack-zippy will serve any static assets, including gzipped assets, from your
+Follow the installation instructions above and rack-zippy will serve any static assets, including gzipped assets, from your
 application's public/ directory and will respond with sensible caching headers.
 
 ## Contributing
