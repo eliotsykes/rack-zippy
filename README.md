@@ -1,7 +1,5 @@
 # rack-zippy
 
-WORK IN PROGRESS, DO NOT USE!
-
 rack-zippy is a Rack middleware for serving static gzipped assets precompiled by the Rails asset pipeline into the public/assets directory. Use it
 on Heroku if you want to serve the precompiled gzipped assets to gzip-capable clients with sensible caching headers.
 
