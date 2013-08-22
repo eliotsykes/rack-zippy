@@ -37,3 +37,11 @@ application's public/ directory and will respond with sensible caching headers.
 4. Push to the branch (`git push origin my-new-feature`)
 5. Create new Pull Request
 
+## Releasing a new gem
+
+1. Increment version in lib/rack-zippy/version.rb in line with semantic versioning
+2. Update CHANGELOG.md
+3. Tests pass? (`rake test`)
+4. Build the gem (`rake build`)
+5. Release on rubygems.org (`rake release`)
+
