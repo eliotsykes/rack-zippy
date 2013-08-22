@@ -1,4 +1,4 @@
-require "rack-zippy/version"
+require 'rack-zippy/version'
 
 module Rack
   module Zippy
@@ -18,11 +18,8 @@ module Rack
           file_path = "#{@asset_root}#{path_info}"
 
           if ::File.exists?(file_path)
-            headers = {
-                'Content-Type'  => Rack::Mime.mime_type(::File.extname(path_info)),
-                'Last-Modified' => 'Mon, 10 Jan 2005 10:00:00 GMT',
-                'Cache-Control' => "public, max-age=#{max_age_in_secs(path_info)}"
-            }
+            headers = { 'Content-Type'  => Rack::Mime.mime_type(::File.extname(path_info)) }
+            headers.merge! cache_headers(path_info)
 
             gzipped_file_path = "#{file_path}.gz"
             gzipped_file_present = ::File.exists?(gzipped_file_path)
@@ -66,6 +63,27 @@ module Rack
 
       ILLEGAL_PATH_REGEX = /(\.\.|\/\.)/
 
+      # Old last-modified headers encourage caching via browser heuristics. Use it for year-long cached assets.
+      CACHE_FRIENDLY_LAST_MODIFIED = 'Mon, 10 Jan 2005 10:00:00 GMT'
+
+      def cache_headers(path_info)
+        case path_info
+          when PRECOMPILED_ASSETS_SUBDIR_REGEX
+            lifetime = :year
+            last_modified = CACHE_FRIENDLY_LAST_MODIFIED
+          when '/favicon.ico'
+            lifetime = :month
+            last_modified = CACHE_FRIENDLY_LAST_MODIFIED
+          else
+            lifetime = :day
+        end
+
+        headers = { 'Cache-Control' => "public, max-age=#{SECONDS_IN[lifetime]}" }
+        headers['Last-Modified'] = last_modified if last_modified
+
+        return headers
+      end
+
       def serve?(path_info)
         is_compilable_asset = (path_info =~ PRECOMPILED_ASSETS_SUBDIR_REGEX)
         if is_compilable_asset
@@ -76,19 +94,6 @@ module Rack
 
       def should_assets_be_compiled_already?
         !::Rails.configuration.assets.compile
-      end
-
-      def max_age_in_secs(path_info)
-        case path_info
-          when PRECOMPILED_ASSETS_SUBDIR_REGEX
-            max_age = SECONDS_IN[:year]
-          when '/favicon.ico'
-            max_age = SECONDS_IN[:month]
-          else
-            max_age = SECONDS_IN[:day]
-        end
-
-        return max_age
       end
 
       def client_accepts_gzip?(rack_env)

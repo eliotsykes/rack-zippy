@@ -20,6 +20,18 @@ class Rack::Zippy::AssetServerTest < Test::Unit::TestCase
     Rack::Zippy::AssetServer.new(rack_app)
   end
 
+  def test_cache_friendly_last_modified_is_not_set_for_files_outside_of_assets_subdir
+    get '/robots.txt'
+    assert_response_ok
+    assert_last_modified nil
+  end
+
+  def test_cache_friendly_last_modified_is_set_for_root_favicon_as_it_rarely_changes
+    get '/favicon.ico'
+    assert_response_ok
+    assert_cache_friendly_last_modified
+  end
+
   def test_does_not_serve_assets_subdir_request_when_assets_compile_enabled
     ::Rails.configuration.assets.compile = true
     get '/assets/application.css'
@@ -90,21 +102,20 @@ class Rack::Zippy::AssetServerTest < Test::Unit::TestCase
     get '/favicon.ico'
     assert_response_ok
     assert_cache_max_age :month
-    assert_cache_friendly_last_modified
   end
 
   def test_responds_with_day_long_cache_headers_for_robots_txt
     get '/robots.txt'
     assert_response_ok
     assert_cache_max_age :day
-    assert_cache_friendly_last_modified
+    assert_last_modified nil
   end
 
   def test_responds_with_day_long_cache_headers_for_root_html_requests
     get '/thanks.html'
     assert_response_ok
     assert_cache_max_age :day
-    assert_cache_friendly_last_modified
+    assert_last_modified nil
   end
 
   def test_max_cache_and_vary_accept_encoding_headers_present_for_css_requests_by_non_gzip_clients
@@ -229,6 +240,10 @@ class Rack::Zippy::AssetServerTest < Test::Unit::TestCase
 
   DURATIONS_IN_SECS = {:year => 31536000, :month => 2678400, :day => 86400}.freeze
 
+  def assert_last_modified(expected)
+    assert_equal expected, last_response.headers['last-modified']
+  end
+
   def env_for_gzip_capable_client
     {'HTTP_ACCEPT_ENCODING' => 'deflate,gzip,sdch'}
   end
@@ -241,9 +256,9 @@ class Rack::Zippy::AssetServerTest < Test::Unit::TestCase
     assert_equal "public, max-age=#{DURATIONS_IN_SECS[duration]}", last_response.headers['cache-control']
   end
 
-  # Browsers favour caching assets with older Last Modified dates IIRC
+  # Browser caching heuristics favour assets with older Last Modified dates IIRC
   def assert_cache_friendly_last_modified
-    assert_equal 'Mon, 10 Jan 2005 10:00:00 GMT', last_response.headers['last-modified']
+    assert_last_modified 'Mon, 10 Jan 2005 10:00:00 GMT'
   end
 
   def assert_underlying_app_responded
