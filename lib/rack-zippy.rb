@@ -17,7 +17,7 @@ module Rack
 
           file_path = "#{@asset_root}#{path_info}"
 
-          if ::File.exists?(file_path)
+          if ::File.file?(file_path)
             headers = { 'Content-Type'  => Rack::Mime.mime_type(::File.extname(path_info)) }
             headers.merge! cache_headers(path_info)
 
@@ -57,7 +57,7 @@ module Rack
 
       STATIC_EXTENSION_REGEX = /\.(?:css|js|html|htm|txt|ico|png|jpg|jpeg|gif|pdf|svg|zip|gz|eps|psd|ai)\z/i
 
-      PRECOMPILED_ASSETS_SUBDIR_REGEX = /\A\/assets\//
+      PRECOMPILED_ASSETS_SUBDIR_REGEX = /\A\/assets(?:\/|\z)/
 
       ACCEPTS_GZIP_REGEX = /\bgzip\b/
 
@@ -85,8 +85,8 @@ module Rack
       end
 
       def serve?(path_info)
-        is_compilable_asset = (path_info =~ PRECOMPILED_ASSETS_SUBDIR_REGEX)
-        if is_compilable_asset
+        is_assets_dir_or_below = (path_info =~ PRECOMPILED_ASSETS_SUBDIR_REGEX)
+        if is_assets_dir_or_below
           return should_assets_be_compiled_already?
         end
         return has_static_extension?(path_info)
