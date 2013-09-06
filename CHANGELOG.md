@@ -1,3 +1,7 @@
+## Awaiting release
+-  Fix error on request for assets root dir (fixes [#2](https://github.com/eliotsykes/rack-zippy/issues/2))
+-  Add MIT license to gemspec (fixes [#1](https://github.com/eliotsykes/rack-zippy/issues/1))
+
 ## 1.0.0 / 2013-08-22
 
 Production-ready release
