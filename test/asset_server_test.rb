@@ -20,6 +20,36 @@ class Rack::Zippy::AssetServerTest < Test::Unit::TestCase
     Rack::Zippy::AssetServer.new(rack_app)
   end
 
+  def test_request_for_non_asset_path_beginning_with_assets_dir_name_bypasses_middleware
+    get '/assets-are-great-but-im-not-one'
+    assert_underlying_app_responded
+  end
+
+  def test_request_for_subdir_of_assets_responds_404_not_found
+    ['/assets/blog', '/assets/blog/logos/'].each do |path|
+      local_path = "public#{path}"
+      assert File.directory?(local_path)
+      get path
+      assert_not_found
+    end
+  end
+
+  def test_request_for_non_existent_subdir_of_assets_responds_404_not_found
+    ['/assets/ghost', '/assets/does/not/exist', '/assets/nothing-here/with-trailing-slash/'].each do |path|
+      local_path = "public#{path}"
+      assert !File.exists?(local_path)
+      get path
+      assert_not_found
+    end
+  end
+
+  def test_request_for_assets_root_responds_404_not_found
+    ['/assets/', '/assets'].each do |assets_root|
+      get assets_root
+      assert_not_found "'#{assets_root}' assets root request should not be found"
+    end
+  end
+
   def test_cache_friendly_last_modified_is_not_set_for_files_outside_of_assets_subdir
     get '/robots.txt'
     assert_response_ok
@@ -35,8 +65,7 @@ class Rack::Zippy::AssetServerTest < Test::Unit::TestCase
   def test_does_not_serve_assets_subdir_request_when_assets_compile_enabled
     ::Rails.configuration.assets.compile = true
     get '/assets/application.css'
-    assert_response_ok
-    assert_equal 'Up above the streets and houses', last_response.body
+    assert_underlying_app_responded
   end
 
   def test_serve_returns_true_if_request_has_static_extension
@@ -278,9 +307,9 @@ class Rack::Zippy::AssetServerTest < Test::Unit::TestCase
     assert_equal ::File.size(path).to_s, last_response.headers['content-length']
   end
 
-  def assert_not_found
-    assert_equal 404, last_response.status
-    assert_equal 'Not Found', last_response.body
+  def assert_not_found(msg=nil)
+    assert_equal 404, last_response.status, msg
+    assert_equal 'Not Found', last_response.body, msg
   end
 
   def ensure_correct_working_directory
