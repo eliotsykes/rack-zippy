@@ -32,6 +32,14 @@ Add this line to config/application.rb:
 Follow the installation instructions above and rack-zippy will serve any static assets, including gzipped assets, from your
 application's public/ directory and will respond with sensible caching headers.
 
+## Troubleshooting
+
+### I'm seeing the error `'assert_index': No such middleware to insert before: ActionDispatch::Static (RuntimeError)`
+
+Check your environment (in config/environments/) does not have serve_static assets set to false:
+
+    config.serve_static_assets = false # Oops! Should be set to true for rack-zippy
+
 ## Contributing
 
 1. Fork it
@@ -43,9 +51,9 @@ application's public/ directory and will respond with sensible caching headers.
 
 ## Releasing a new gem
 
-1. Increment version in lib/rack-zippy/version.rb in line with semantic versioning
+1. Update pre-release version to the release version in lib/rack-zippy/version.rb, e.g. '1.0.1.pre' becomes '1.0.1'
 2. Update CHANGELOG.md
 3. Tests pass? (`rake test`)
 4. Build the gem (`rake build`)
 5. Release on rubygems.org (`rake release`)
-
+6. Update version to the next pre-release version in lib/rack-zippy/version.rb, e.g. '1.0.1' becomes '1.0.2.pre'
