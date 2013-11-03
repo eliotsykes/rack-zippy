@@ -34,7 +34,7 @@ application's public/ directory and will respond with sensible caching headers.
 
 ## Troubleshooting
 
-### I'm seeing the error `'assert_index': No such middleware to insert before: ActionDispatch::Static (RuntimeError)`
+##### 'assert_index': No such middleware to insert before: ActionDispatch::Static (RuntimeError)
 
 Check your environment (in config/environments/) does not have serve_static assets set to false:
 
