@@ -36,7 +36,7 @@ application's public/ directory and will respond with sensible caching headers.
 
 ##### 'assert_index': No such middleware to insert before: ActionDispatch::Static (RuntimeError)
 
-Check your environment (in config/environments/) does not have serve_static assets set to false:
+Check your environment (in config/environments/) does not have `serve_static_assets` set to false:
 
     config.serve_static_assets = false # Oops! Should be set to true for rack-zippy
 
