@@ -14,33 +14,25 @@ module Rack
         assert_legal_path path_info
 
         if serve?(path_info)
+          headers = { 'Content-Type'  => Rack::Mime.mime_type(::File.extname(path_info)) }
+          headers.merge! cache_headers(path_info)
 
-          file_path = "#{@asset_root}#{path_info}"
+          file_path = path_to_file(path_info)
+          gzipped_file_path = "#{file_path}.gz"
+          gzipped_file_present = ::File.exists?(gzipped_file_path) && ::File.readable?(gzipped_file_path)
 
-          if ::File.file?(file_path)
-            headers = { 'Content-Type'  => Rack::Mime.mime_type(::File.extname(path_info)) }
-            headers.merge! cache_headers(path_info)
+          if gzipped_file_present
+            headers['Vary'] = 'Accept-Encoding'
 
-            gzipped_file_path = "#{file_path}.gz"
-            gzipped_file_present = ::File.exists?(gzipped_file_path)
-
-            if gzipped_file_present
-              headers['Vary'] = 'Accept-Encoding'
-
-              if client_accepts_gzip?(env)
-                file_path = gzipped_file_path
-                headers['Content-Encoding'] = 'gzip'
-              end
+            if client_accepts_gzip?(env)
+              file_path = gzipped_file_path
+              headers['Content-Encoding'] = 'gzip'
             end
-
-            status = 200
-            headers['Content-Length'] = ::File.size(file_path).to_s
-            response_body = [::File.read(file_path)]
-          else
-            status = 404
-            headers = {}
-            response_body = ['Not Found']
           end
+
+          status = 200
+          headers['Content-Length'] = ::File.size(file_path).to_s
+          response_body = [::File.read(file_path)]
           return [status, headers, response_body]
         end
 
@@ -84,15 +76,28 @@ module Rack
         return headers
       end
 
-      def serve?(path_info)
-        is_assets_dir_or_below = (path_info =~ PRECOMPILED_ASSETS_SUBDIR_REGEX)
-        if is_assets_dir_or_below
-          return should_assets_be_compiled_already?
-        end
-        return has_static_extension?(path_info)
+      def path_to_file(path_info)
+        "#{@asset_root}#{path_info}"
       end
 
-      def should_assets_be_compiled_already?
+      def serve?(path_info)
+        should_serve_from_filesystem = false
+
+        if has_static_extension?(path_info)
+          file_path = path_to_file(path_info)
+          is_serveable = ::File.file?(file_path) && ::File.readable?(file_path)
+
+          if is_serveable
+            is_outside_assets_dir = !(path_info =~ PRECOMPILED_ASSETS_SUBDIR_REGEX)
+            should_serve_from_filesystem = is_outside_assets_dir || block_asset_pipeline_from_generating_asset?
+          end
+        end
+
+        return should_serve_from_filesystem
+      end
+
+      def block_asset_pipeline_from_generating_asset?
+        # config.assets.compile is normally false in production, and true in dev+test envs.
         !::Rails.configuration.assets.compile
       end
 

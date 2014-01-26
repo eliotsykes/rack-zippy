@@ -1,3 +1,7 @@
+## 1.1.0-pre / 2014-01-26
+- rack-zippy no longer blocks requests for assets that it cannot find on the filesystem. These
+  requests are now passed on to the app. ([#7](https://github.com/eliotsykes/rack-zippy/issues/7))
+
 ## 1.0.1 / 2013-09-06
 -  Fix error on request for assets root dir (fixes [#2](https://github.com/eliotsykes/rack-zippy/issues/2))
 -  Add MIT license to gemspec (fixes [#1](https://github.com/eliotsykes/rack-zippy/issues/1))

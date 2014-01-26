@@ -25,28 +25,28 @@ class Rack::Zippy::AssetServerTest < Test::Unit::TestCase
     assert_underlying_app_responded
   end
 
-  def test_request_for_subdir_of_assets_responds_404_not_found
+  def test_request_for_subdir_of_assets_passed_onto_app
     ['/assets/blog', '/assets/blog/logos/'].each do |path|
       local_path = "public#{path}"
       assert File.directory?(local_path)
       get path
-      assert_not_found
+      assert_underlying_app_responded
     end
   end
 
-  def test_request_for_non_existent_subdir_of_assets_responds_404_not_found
+  def test_request_for_non_existent_subdir_of_assets_passed_onto_app
     ['/assets/ghost', '/assets/does/not/exist', '/assets/nothing-here/with-trailing-slash/'].each do |path|
       local_path = "public#{path}"
       assert !File.exists?(local_path)
       get path
-      assert_not_found
+      assert_underlying_app_responded
     end
   end
 
-  def test_request_for_assets_root_responds_404_not_found
+  def test_request_for_assets_root_passed_onto_app
     ['/assets/', '/assets'].each do |assets_root|
       get assets_root
-      assert_not_found "'#{assets_root}' assets root request should not be found"
+      assert_underlying_app_responded
     end
   end
 
@@ -68,8 +68,12 @@ class Rack::Zippy::AssetServerTest < Test::Unit::TestCase
     assert_underlying_app_responded
   end
 
-  def test_serve_returns_true_if_request_has_static_extension
-    assert app.send(:serve?, '/about.html')
+  def test_serve_returns_true_if_request_has_static_extension_and_file_exists
+    assert app.send(:serve?, '/thanks.html')
+  end
+
+  def test_serve_returns_false_if_request_has_static_extension_and_file_does_not_exist
+    assert !app.send(:serve?, '/about.html')
   end
 
   def test_serve_returns_false_if_request_does_not_have_static_extension
@@ -85,15 +89,15 @@ class Rack::Zippy::AssetServerTest < Test::Unit::TestCase
     assert !app.send(:serve?, '/assets/application.css')
   end
 
-  def test_should_assets_be_compiled_already_returns_false_if_assets_compile_enabled
+  def test_block_asset_pipeline_from_generating_asset_returns_false_if_assets_compile_enabled
     ::Rails.configuration.assets.compile = true
     assert ::Rails.configuration.assets.compile
-    assert !app.send(:should_assets_be_compiled_already?)
+    assert !app.send(:block_asset_pipeline_from_generating_asset?)
   end
 
-  def test_should_assets_be_compiled_already_returns_true_if_assets_compile_disabled
+  def test_block_asset_pipeline_from_generating_asset_returns_true_if_assets_compile_disabled
     assert !::Rails.configuration.assets.compile
-    assert app.send(:should_assets_be_compiled_already?)
+    assert app.send(:block_asset_pipeline_from_generating_asset?)
   end
 
   def test_responds_with_gzipped_css_to_gzip_capable_clients
@@ -231,9 +235,9 @@ class Rack::Zippy::AssetServerTest < Test::Unit::TestCase
     assert_underlying_app_responded
   end
 
-  def test_does_not_pass_not_found_asset_requests_onto_app
+  def test_passes_not_found_asset_requests_onto_app
     get '/index.html'
-    assert_not_found
+    assert_underlying_app_responded
   end
 
   def test_responds_with_favicon_in_assets_dir
@@ -250,19 +254,19 @@ class Rack::Zippy::AssetServerTest < Test::Unit::TestCase
     assert_content_length 'public/favicon.ico'
   end
 
-  def test_responds_404_not_found_for_non_existent_image
+  def test_request_for_non_existent_image_passed_onto_app
     get '/assets/pot-of-gold.png'
-    assert_not_found
+    assert_underlying_app_responded
   end
 
-  def test_responds_404_not_found_for_non_existent_css
+  def test_request_for_non_existent_css_passed_onto_app
     get '/assets/unicorn.css'
-    assert_not_found
+    assert_underlying_app_responded
   end
 
-  def test_responds_404_not_found_for_non_existent_js
+  def test_request_for_non_existent_js_passed_onto_app
     get '/assets/dragon.js'
-    assert_not_found
+    assert_underlying_app_responded
   end
 
   private
