@@ -1,4 +1,4 @@
-## 1.1.0-pre / 2014-01-26
+## 1.1.0.pre / 2014-01-26
 - rack-zippy no longer blocks requests for assets that it cannot find on the filesystem. These
   requests are now passed on to the app. ([#7](https://github.com/eliotsykes/rack-zippy/issues/7))
 
