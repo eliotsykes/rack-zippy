@@ -22,6 +22,12 @@ Add this line to your application's Gemfile:
 And then execute:
 
     $ bundle
+    
+In `config/environments/production.rb`, set `config.serve_static_assets` to `true`:
+
+    # Puts ActionDispatch::Static in middleware stack which we are going to replace with
+    # Rack::Zippy::AssetServer
+    config.serve_static_assets = true
 
 Create the file `config/initializers/rack_zippy.rb` and put this line in it:
 
