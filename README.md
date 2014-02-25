@@ -9,9 +9,10 @@ rack-zippy replaces the ActionDispatch::Static middleware used by Rails, which i
 the `rake assets:precompile` task. rack-zippy will serve non-gzipped assets where they are not available or not supported by the
 requesting client.
 
-For a fuller explanation of the how, why, and the kind of performance difference you can expect when using rack-zippy,
-see [Serving Compressed Assets with Heroku and Rack-Zippy](http://www.cheynewallace.com/serving-compressed-assets-with-heroku-rack-zippy/)
-(thanks to Cheyne Wallace).
+Watch the [Web Dev Break podcast on rack-zippy](http://www.webdevbreak.com/specials/rack-zippy "Faster, friendlier assets with rack-zippy") to see how you can check if your app
+is currently serving uncompressed assets and how quick it is to setup rack-zippy:
+
+[ ![Faster, friendlier assets with rack-zippy](/video-player.png "Faster, friendlier assets with rack-zippy") ](http://www.webdevbreak.com/specials/rack-zippy "Faster, friendlier assets with rack-zippy")
 
 ## Installation
 
