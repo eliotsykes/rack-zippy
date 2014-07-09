@@ -4,7 +4,7 @@ module Rack
   module Zippy
     class AssetServer
 
-      def initialize(app, asset_root='public')
+      def initialize(app, asset_root=Rails.public_path)
         @app = app
         @asset_root = asset_root
       end

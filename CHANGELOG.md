@@ -1,3 +1,6 @@
+## 1.2.1.pre / unreleased
+- Use absolute (not relative) path for default asset_root ([#11](https://github.com/eliotsykes/rack-zippy/issues/11))
+
 ## 1.2.0 / 2014-07-09
 - Add handling of font files with extensions: woff, woff2, ttf, eot, otf
   ([#9](https://github.com/eliotsykes/rack-zippy/issues/9))
