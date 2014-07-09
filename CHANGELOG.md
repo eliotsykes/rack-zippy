@@ -1,4 +1,4 @@
-## 1.2.1.pre / unreleased
+## 1.2.1 / 2014-07-09
 - Use absolute (not relative) path for default asset_root ([#11](https://github.com/eliotsykes/rack-zippy/issues/11))
 
 ## 1.2.0 / 2014-07-09
