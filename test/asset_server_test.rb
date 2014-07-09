@@ -5,6 +5,7 @@ class Rack::Zippy::AssetServerTest < Test::Unit::TestCase
 
   def setup
     ensure_correct_working_directory
+    ::Rails.public_path = Pathname.new("#{Dir.pwd}/public")
     ::Rails.configuration.assets.compile = false
   end
 
@@ -13,11 +14,7 @@ class Rack::Zippy::AssetServerTest < Test::Unit::TestCase
   end
 
   def app
-    response = 'Up above the streets and houses'
-    headers = {}
-    status = 200
-    rack_app = lambda { |env| [status, headers, response] }
-    Rack::Zippy::AssetServer.new(rack_app)
+    Rack::Zippy::AssetServer.new(create_rack_app)
   end
 
   def test_request_for_non_asset_path_beginning_with_assets_dir_name_bypasses_middleware
@@ -282,9 +279,27 @@ class Rack::Zippy::AssetServerTest < Test::Unit::TestCase
     assert_underlying_app_responded
   end
 
+  def test_asset_root_constructor_arg_accepts_string
+    asset_server = Rack::Zippy::AssetServer.new(create_rack_app, '/custom/asset/root')
+    assert_equal '/custom/asset/root', asset_server.instance_variable_get('@asset_root')
+  end
+
+  def test_default_asset_root_is_rails_public_path
+    Rails.public_path = '/unexpected/absolute/path/to/public'
+    asset_server = Rack::Zippy::AssetServer.new(create_rack_app)
+    assert_equal '/unexpected/absolute/path/to/public', asset_server.instance_variable_get('@asset_root')
+  end
+
   private
 
   DURATIONS_IN_SECS = {:year => 31536000, :month => 2678400, :day => 86400}.freeze
+
+  def create_rack_app
+    status = 200
+    headers = {}
+    response = 'Up above the streets and houses'
+    lambda { |env| [status, headers, response] }
+  end
 
   def assert_last_modified(expected)
     assert_equal expected, last_response.headers['last-modified']
