@@ -1,7 +1,7 @@
 ## 1.1.1-pre / Unreleased
 - Add handling of font files with extensions: woff, woff2, ttf, eot, otf
   ([#9](https://github.com/eliotsykes/rack-zippy/issues/9))
-- Handle flash .swf file extension
+- Handle flash .swf file extension ([#20](https://github.com/eliotsykes/rack-zippy/issues/20))
 
 ## 1.1.0 / 2014-01-26
 - rack-zippy no longer blocks requests for assets that it cannot find on the filesystem. These
