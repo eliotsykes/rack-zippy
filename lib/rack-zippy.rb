@@ -47,7 +47,8 @@ module Rack
           :year => 365*(24*60*60)
       }.freeze
 
-      STATIC_EXTENSION_REGEX = /\.(?:css|js|html|htm|txt|ico|png|jpg|jpeg|gif|pdf|svg|zip|gz|eps|psd|ai)\z/i
+      # Font extensions: woff, woff2, ttf, eot, otf
+      STATIC_EXTENSION_REGEX = /\.(?:css|js|html|htm|txt|ico|png|jpg|jpeg|gif|pdf|svg|zip|gz|eps|psd|ai|woff|woff2|ttf|eot|otf)\z/i
 
       PRECOMPILED_ASSETS_SUBDIR_REGEX = /\A\/assets(?:\/|\z)/
 

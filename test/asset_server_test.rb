@@ -230,6 +230,14 @@ class Rack::Zippy::AssetServerTest < Test::Unit::TestCase
     end
   end
 
+  def test_has_static_extension_returns_true_for_fonts
+    font_extensions = ['woff', 'woff2', 'ttf', 'eot', 'otf']
+    font_extensions.each do |extension|
+      assert app.send(:has_static_extension?, "/comic-sans.#{extension}"),
+             "'#{extension}' font extension not recognized"
+    end
+  end
+
   def test_passes_non_asset_requests_onto_app
     get '/about'
     assert_underlying_app_responded
