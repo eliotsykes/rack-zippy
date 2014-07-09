@@ -32,9 +32,9 @@ In `config/environments/production.rb`, set `config.serve_static_assets` to `tru
 
 Create the file `config/initializers/rack_zippy.rb` and put this line in it:
 
-    Rails.application.config.middleware.swap(ActionDispatch::Static, Rack::Zippy::AssetServer)
+    Rails.application.config.middleware.insert_before(ActionDispatch::Static, Rack::Zippy::AssetServer)
 
-Now run `rake middleware` at the command line and make sure that `Rack::Zippy::AssetServer` is near the top of the outputted list. ActionDispatch::Static should not be in the list. Nicely done, rack-zippy is now installed in your app.
+Now run `rake middleware` at the command line and make sure that `Rack::Zippy::AssetServer` is near the top of the outputted list above `ActionDispatch::Static`. Nicely done, rack-zippy is now installed in your app.
 
 ## Usage
 
