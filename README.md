@@ -54,15 +54,23 @@ Check your environment (in config/environments/) does not have `serve_static_ass
 1. Fork it
 2. Create your feature branch (`git checkout -b my-new-feature`)
 3. Run tests (`rake test`)
-3. Commit your changes (`git commit -am 'Add some feature'`)
-4. Push to the branch (`git push origin my-new-feature`)
-5. Create new Pull Request
+4. Commit your changes (`git commit -am 'Add some feature'`)
+5. Push to the branch (`git push origin my-new-feature`)
+6. Create new Pull Request
+
+## Contributors
+
+- [Eliot Sykes](https://github.com/eliotsykes)
+- [Kieran Topping](https://github.com/ktopping)
+- [Luke Wendling](https://github.com/lukewendling)
+
 
 ## Releasing a new gem
 
 1. Update pre-release version to the release version in lib/rack-zippy/version.rb, e.g. '1.0.1.pre' becomes '1.0.1'
-2. Update CHANGELOG.md
+2. Update CHANGELOG.md and Contributors in README.md
 3. Tests pass? (`rake test`)
 4. Build the gem (`rake build`)
 5. Release on rubygems.org (`rake release`)
 6. Update version to the next pre-release version in lib/rack-zippy/version.rb, e.g. '1.0.1' becomes '1.0.2.pre'
+
