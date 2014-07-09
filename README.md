@@ -72,5 +72,6 @@ Check your environment (in config/environments/) does not have `serve_static_ass
 3. Tests pass? (`rake test`)
 4. Build the gem (`rake build`)
 5. Release on rubygems.org (`rake release`)
-6. Update version to the next pre-release version in lib/rack-zippy/version.rb, e.g. '1.0.1' becomes '1.0.2.pre'
+6. Update version to the next pre-release version in lib/rack-zippy/version.rb, e.g. '1.0.1' becomes '1.0.2.pre'.
+7. Commit and push the updated lib/rack-zippy/version.rb.
 
