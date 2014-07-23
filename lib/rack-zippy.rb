@@ -46,6 +46,13 @@ module Rack
         !::Rails.configuration.assets.compile
       end
 
+      def ==(other)
+        return false if other.nil?
+        return true if self.equal?(other)
+        return self.class == other.class && self.path == other.path
+      end
+      alias_method :eql?, :==
+
     end
 
     class AssetServer
@@ -59,11 +66,18 @@ module Rack
         path_info = env['PATH_INFO']
         assert_legal_path path_info
 
-        if serve?(path_info)
+        file_path = path_to_file(path_info)
+
+        serveable_files = ServeableFile.find_all(
+            :path_info => path_info,
+            :asset_root => @asset_root,
+            :path => file_path
+        )
+
+        unless serveable_files.empty?
           headers = { 'Content-Type'  => Rack::Mime.mime_type(::File.extname(path_info)) }
           headers.merge! cache_headers(path_info)
 
-          file_path = path_to_file(path_info)
           gzipped_file_path = "#{file_path}.gz"
           gzipped_file_present = ::File.exists?(gzipped_file_path) && ::File.readable?(gzipped_file_path)
 
@@ -120,15 +134,6 @@ module Rack
 
       def path_to_file(path_info)
         "#{@asset_root}#{path_info}"
-      end
-
-      def serve?(path_info)
-        serveable_files = ServeableFile.find_all(
-            :path_info => path_info,
-            :asset_root => @asset_root,
-            :path => path_to_file(path_info)
-        )
-        return !serveable_files.empty?
       end
 
       def client_accepts_gzip?(rack_env)
