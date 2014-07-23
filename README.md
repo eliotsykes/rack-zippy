@@ -14,7 +14,7 @@ is currently serving uncompressed assets and how quick it is to setup rack-zippy
 
 [ ![Faster, friendlier assets with rack-zippy](/video-player.png "Faster, friendlier assets with rack-zippy") ](http://www.webdevbreak.com/specials/rack-zippy "Faster, friendlier assets with rack-zippy")
 
-## Installation
+## Installation in Rails app
 
 Add this line to your application's Gemfile:
 
@@ -36,10 +36,31 @@ Create the file `config/initializers/rack_zippy.rb` and put this line in it:
 
 Now run `rake middleware` at the command line and make sure that `Rack::Zippy::AssetServer` is near the top of the outputted list. ActionDispatch::Static should not be in the list. Nicely done, rack-zippy is now installed in your app.
 
+## Installation in Rack app (that isn’t a Rails app)
+
+Add this line to your application's Gemfile:
+
+    gem 'rack-zippy'
+
+And then execute:
+
+    $ bundle
+
+In `config.ru`:
+
+    require 'rack-zippy'
+
+    # Set asset_root to an absolute or relative path to the directory holding your asset files
+    # e.g. '/path/to/my/apps/static-assets' or 'public'
+    asset_root = '/path/to/my/apps/public'
+    use Rack::Zippy::AssetServer, asset_root
+
+
 ## Usage
 
 Follow the installation instructions above and rack-zippy will serve any static assets, including gzipped assets, from your
 application's public/ directory and will respond with sensible caching headers.
+
 
 ## Troubleshooting
 
@@ -49,6 +70,7 @@ Check your environment (in config/environments/) does not have `serve_static_ass
 
     config.serve_static_assets = false # Oops! Should be set to true for rack-zippy
 
+
 ## Contributing
 
 1. Fork it
@@ -57,6 +79,7 @@ Check your environment (in config/environments/) does not have `serve_static_ass
 4. Commit your changes (`git commit -am 'Add some feature'`)
 5. Push to the branch (`git push origin my-new-feature`)
 6. Create new Pull Request
+
 
 ## Contributors
 
