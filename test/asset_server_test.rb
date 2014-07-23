@@ -204,31 +204,6 @@ class Rack::Zippy::AssetServerTest < Test::Unit::TestCase
     assert_content_length 'public/robots.txt'
   end
 
-  def test_has_static_extension_handles_non_lowercase_chars
-    ['pNG', 'JPEG', 'HTML', 'HtM', 'GIF', 'Ico'].each do |extension|
-      assert app.send(:has_static_extension?, "/some-asset.#{extension}")
-    end
-  end
-
-  def test_has_static_extension_returns_false_for_asset_paths_without_period
-    ['/assets/somepng', '/indexhtml', '/assets/applicationcss'].each do |path|
-      assert !app.send(:has_static_extension?, path)
-    end
-  end
-
-  def test_has_static_extension_returns_true_for_fonts
-    font_extensions = ['woff', 'woff2', 'ttf', 'eot', 'otf']
-    font_extensions.each do |extension|
-      assert app.send(:has_static_extension?, "/comic-sans.#{extension}"),
-             "'#{extension}' font extension not recognized"
-    end
-  end
-
-  def test_has_static_extension_returns_true_for_flash
-    assert app.send(:has_static_extension?, '/splash-page-like-its-1999.swf'),
-           "Should handle flash .swf files"
-  end
-
   def test_passes_non_asset_requests_onto_app
     get '/about'
     assert_underlying_app_responded

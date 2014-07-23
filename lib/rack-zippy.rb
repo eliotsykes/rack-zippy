@@ -93,10 +93,6 @@ module Rack
           :year => 365*(24*60*60)
       }.freeze
 
-      # Font extensions: woff, woff2, ttf, eot, otf
-      # TODO: Delete this
-      STATIC_EXTENSION_REGEX = /\.(?:css|js|html|htm|txt|ico|png|jpg|jpeg|gif|pdf|svg|zip|gz|eps|psd|ai|woff|woff2|ttf|eot|otf|swf)\z/i
-
       ACCEPTS_GZIP_REGEX = /\bgzip\b/
 
       ILLEGAL_PATH_REGEX = /(\.\.|\/\.)/
@@ -137,11 +133,6 @@ module Rack
 
       def client_accepts_gzip?(rack_env)
         rack_env['HTTP_ACCEPT_ENCODING'] =~ ACCEPTS_GZIP_REGEX
-      end
-
-      # TODO: Delete this
-      def has_static_extension?(path)
-        path =~ STATIC_EXTENSION_REGEX
       end
 
       def assert_legal_path(path_info)
