@@ -2,6 +2,52 @@ require 'rack-zippy/version'
 
 module Rack
   module Zippy
+
+    PRECOMPILED_ASSETS_SUBDIR_REGEX = /\A\/assets(?:\/|\z)/
+
+    class ServeableFile
+
+      # Font extensions: woff, woff2, ttf, eot, otf
+      STATIC_EXTENSION_REGEX = /\.(?:css|js|html|htm|txt|ico|png|jpg|jpeg|gif|pdf|svg|zip|gz|eps|psd|ai|woff|woff2|ttf|eot|otf|swf)\z/i
+
+      attr_reader :path
+
+      def initialize(path)
+        @path = path
+      end
+
+      def self.find_all(options)
+        path_info = options[:path_info]
+        asset_root = options[:asset_root]
+        file_path = options[:path]
+
+        serveable_files = []
+
+        if has_static_extension?(path_info)
+          is_serveable = ::File.file?(file_path) && ::File.readable?(file_path)
+
+          if is_serveable
+            is_outside_assets_dir = !(path_info =~ ::Rack::Zippy::PRECOMPILED_ASSETS_SUBDIR_REGEX)
+            if is_outside_assets_dir || block_asset_pipeline_from_generating_asset?
+              serveable_files << ServeableFile.new(file_path)
+            end
+          end
+        end
+
+        return serveable_files
+      end
+
+      def self.has_static_extension?(path)
+        path =~ STATIC_EXTENSION_REGEX
+      end
+
+      def self.block_asset_pipeline_from_generating_asset?
+        # config.assets.compile is normally false in production, and true in dev+test envs.
+        !::Rails.configuration.assets.compile
+      end
+
+    end
+
     class AssetServer
 
       def initialize(app, asset_root=Rails.public_path)
@@ -48,9 +94,8 @@ module Rack
       }.freeze
 
       # Font extensions: woff, woff2, ttf, eot, otf
+      # TODO: Delete this
       STATIC_EXTENSION_REGEX = /\.(?:css|js|html|htm|txt|ico|png|jpg|jpeg|gif|pdf|svg|zip|gz|eps|psd|ai|woff|woff2|ttf|eot|otf|swf)\z/i
-
-      PRECOMPILED_ASSETS_SUBDIR_REGEX = /\A\/assets(?:\/|\z)/
 
       ACCEPTS_GZIP_REGEX = /\bgzip\b/
 
@@ -61,7 +106,7 @@ module Rack
 
       def cache_headers(path_info)
         case path_info
-          when PRECOMPILED_ASSETS_SUBDIR_REGEX
+          when ::Rack::Zippy::PRECOMPILED_ASSETS_SUBDIR_REGEX
             lifetime = :year
             last_modified = CACHE_FRIENDLY_LAST_MODIFIED
           when '/favicon.ico'
@@ -82,30 +127,19 @@ module Rack
       end
 
       def serve?(path_info)
-        should_serve_from_filesystem = false
-
-        if has_static_extension?(path_info)
-          file_path = path_to_file(path_info)
-          is_serveable = ::File.file?(file_path) && ::File.readable?(file_path)
-
-          if is_serveable
-            is_outside_assets_dir = !(path_info =~ PRECOMPILED_ASSETS_SUBDIR_REGEX)
-            should_serve_from_filesystem = is_outside_assets_dir || block_asset_pipeline_from_generating_asset?
-          end
-        end
-
-        return should_serve_from_filesystem
-      end
-
-      def block_asset_pipeline_from_generating_asset?
-        # config.assets.compile is normally false in production, and true in dev+test envs.
-        !::Rails.configuration.assets.compile
+        serveable_files = ServeableFile.find_all(
+            :path_info => path_info,
+            :asset_root => @asset_root,
+            :path => path_to_file(path_info)
+        )
+        return !serveable_files.empty?
       end
 
       def client_accepts_gzip?(rack_env)
         rack_env['HTTP_ACCEPT_ENCODING'] =~ ACCEPTS_GZIP_REGEX
       end
 
+      # TODO: Delete this
       def has_static_extension?(path)
         path =~ STATIC_EXTENSION_REGEX
       end

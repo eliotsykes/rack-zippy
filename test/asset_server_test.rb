@@ -86,17 +86,6 @@ class Rack::Zippy::AssetServerTest < Test::Unit::TestCase
     assert !app.send(:serve?, '/assets/application.css')
   end
 
-  def test_block_asset_pipeline_from_generating_asset_returns_false_if_assets_compile_enabled
-    ::Rails.configuration.assets.compile = true
-    assert ::Rails.configuration.assets.compile
-    assert !app.send(:block_asset_pipeline_from_generating_asset?)
-  end
-
-  def test_block_asset_pipeline_from_generating_asset_returns_true_if_assets_compile_disabled
-    assert !::Rails.configuration.assets.compile
-    assert app.send(:block_asset_pipeline_from_generating_asset?)
-  end
-
   def test_responds_with_gzipped_css_to_gzip_capable_clients
     params = {}
     get '/assets/application.css', params, env_for_gzip_capable_client
