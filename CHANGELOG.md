@@ -1,3 +1,7 @@
+## 1.2.2.pre
+- Installation notes for non-Rails Rack apps added to README.md
+- Remove dependency on Rails being used so zippy works with all Rack apps.
+
 ## 1.2.1 / 2014-07-09
 - Use absolute (not relative) path for default asset_root ([#11](https://github.com/eliotsykes/rack-zippy/issues/11))
 
