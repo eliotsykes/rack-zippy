@@ -27,7 +27,7 @@ module Rack
           is_serveable = ::File.file?(file_path) && ::File.readable?(file_path)
 
           if is_serveable
-            is_outside_assets_dir = !(path_info =~ ::Rack::Zippy::PRECOMPILED_ASSETS_SUBDIR_REGEX)
+            is_outside_assets_dir = !(path_info =~ PRECOMPILED_ASSETS_SUBDIR_REGEX)
             if is_outside_assets_dir || block_asset_pipeline_from_generating_asset?
               serveable_files << ServeableFile.new(file_path)
             end
@@ -116,7 +116,7 @@ module Rack
 
       def cache_headers(path_info)
         case path_info
-          when ::Rack::Zippy::PRECOMPILED_ASSETS_SUBDIR_REGEX
+          when PRECOMPILED_ASSETS_SUBDIR_REGEX
             lifetime = :year
             last_modified = CACHE_FRIENDLY_LAST_MODIFIED
           when '/favicon.ico'
