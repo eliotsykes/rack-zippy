@@ -80,6 +80,30 @@ Check your environment (in config/environments/) does not have `serve_static_ass
 5. Push to the branch (`git push origin my-new-feature`)
 6. Create new Pull Request
 
+### Optional for contributors
+To try a local branch of rack-zippy out as the gem dependency in a local app, configure bundler with a local gem
+override as follows:
+
+In `your-app/Gemfile`: edit the rack-zippy dependency to the following:
+
+    # The branch your-local-branch-name **must** exist otherwise bundler will shout obscenities at you
+    gem 'rack-zippy', :github => 'eliotsykes/rack-zippy', :branch => 'your-local-branch-name'
+
+At the command line, inside `your-app`, configure bundler to set a local git repo to override the one we specified in the previous step for rack-zippy:
+
+    $> bundle config --local local.rack-zippy /path/to/your/local/rack-zippy
+
+Now when you run your-app **with** `bundle exec`, the rack-zippy gem dependency will resolve to `/path/to/your/local/rack-zippy`.
+
+Cleanup time! When you’re finished testing, delete the local override and set your Gemfile dependency back to the original:
+
+    # At the command line:
+    $> bundle config --delete local.rack-zippy
+
+    # In your-app/Gemfile change rack-zippy dependency to this (or similar):
+    gem 'rack-zippy', '~> 9.8.7' # Replace 9.8.7 with the rack-zippy release version you want to use.
+
+
 
 ## Contributors
 
