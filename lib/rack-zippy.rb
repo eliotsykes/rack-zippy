@@ -5,10 +5,41 @@ module Rack
 
     PRECOMPILED_ASSETS_SUBDIR_REGEX = /\A\/assets(?:\/|\z)/
 
-    class ServeableFile
+    class NullAssetCompiler
+      def compiles?(path_info)
+        return false
+      end
+    end
 
-      # Font extensions: woff, woff2, ttf, eot, otf
-      STATIC_EXTENSION_REGEX = /\.(?:css|js|html|htm|txt|ico|png|jpg|jpeg|gif|pdf|svg|zip|gz|eps|psd|ai|woff|woff2|ttf|eot|otf|swf)\z/i
+    class RailsAssetCompiler
+
+      def initialize
+        # config.assets.compile is normally false in production, and true in dev+test envs.
+        # compile == true => active pipeline
+        # compile == false => disabled pipeline
+        @active = ::Rails.configuration.assets.compile
+      end
+
+      def compiles?(path_info)
+        return active? && on_pipeline_path?(path_info)
+      end
+
+      private
+
+      def on_pipeline_path?(path_info)
+        path_info =~ PRECOMPILED_ASSETS_SUBDIR_REGEX
+      end
+
+      def active?
+        return @active
+      end
+
+      def self.rails_env?
+        return defined?(::Rails.version)
+      end
+    end
+
+    class ServeableFile
 
       attr_reader :path
 
@@ -20,30 +51,24 @@ module Rack
         path_info = options[:path_info]
         asset_root = options[:asset_root]
         file_path = options[:path]
+        asset_compiler = options[:asset_compiler]
 
         serveable_files = []
 
-        if has_static_extension?(path_info)
-          is_serveable = ::File.file?(file_path) && ::File.readable?(file_path)
+        is_serveable = has_static_extension?(path_info) &&
+            ::File.file?(file_path) &&
+            ::File.readable?(file_path) &&
+            !asset_compiler.compiles?(path_info)
 
-          if is_serveable
-            is_outside_assets_dir = !(path_info =~ PRECOMPILED_ASSETS_SUBDIR_REGEX)
-            if is_outside_assets_dir || block_asset_pipeline_from_generating_asset?
-              serveable_files << ServeableFile.new(file_path)
-            end
-          end
+        if is_serveable
+          serveable_files << ServeableFile.new(file_path)
         end
 
         return serveable_files
       end
 
       def self.has_static_extension?(path)
-        path =~ STATIC_EXTENSION_REGEX
-      end
-
-      def self.block_asset_pipeline_from_generating_asset?
-        # config.assets.compile is normally false in production, and true in dev+test envs.
-        !::Rails.configuration.assets.compile
+        path =~ AssetServer::STATIC_EXTENSION_REGEX
       end
 
       def ==(other)
@@ -57,9 +82,21 @@ module Rack
 
     class AssetServer
 
-      def initialize(app, asset_root=Rails.public_path)
+      # Font extensions: woff, woff2, ttf, eot, otf
+      STATIC_EXTENSION_REGEX = /\.(?:css|js|html|htm|txt|ico|png|jpg|jpeg|gif|pdf|svg|zip|gz|eps|psd|ai|woff|woff2|ttf|eot|otf|swf)\z/i
+
+      def initialize(app, asset_root=nil)
+        if asset_root.nil?
+          if RailsAssetCompiler.rails_env?
+            asset_root = ::Rails.public_path
+          else
+            raise ArgumentError.new 'Please specify asset_root when initializing Rack::Zippy::AssetServer ' +
+              '(asset_root is the path to your public directory, often the one with favicon.ico in it)'
+          end
+        end
         @app = app
         @asset_root = asset_root
+        @asset_compiler = resolve_asset_compiler
       end
 
       def call(env)
@@ -71,7 +108,8 @@ module Rack
         serveable_files = ServeableFile.find_all(
             :path_info => path_info,
             :asset_root => @asset_root,
-            :path => file_path
+            :path => file_path,
+            :asset_compiler => @asset_compiler
         )
 
         unless serveable_files.empty?
@@ -142,6 +180,11 @@ module Rack
 
       def assert_legal_path(path_info)
         raise SecurityError.new('Illegal path requested') if path_info =~ ILLEGAL_PATH_REGEX
+      end
+
+      def resolve_asset_compiler
+        asset_compiler_class = RailsAssetCompiler.rails_env? ? RailsAssetCompiler : NullAssetCompiler
+        return asset_compiler_class.new
       end
 
     end

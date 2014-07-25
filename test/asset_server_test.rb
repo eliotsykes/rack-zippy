@@ -7,6 +7,7 @@ module Rack
 
       def setup
         ensure_correct_working_directory
+        enter_rails_env
         ::Rails.public_path = Pathname.new(asset_root)
         ::Rails.configuration.assets.compile = false
       end
@@ -15,8 +16,19 @@ module Rack
         revert_to_original_working_directory
       end
 
-      def app
-        AssetServer.new(create_rack_app)
+      def test_static_extension_regexp_available_in_established_constant_for_monkey_patching
+        assert AssetServer.const_defined?(:STATIC_EXTENSION_REGEX)
+      end
+
+      def test_rails_asset_compiler_set_when_rails_environment_detected
+        asset_compiler = app.instance_variable_get('@asset_compiler')
+        assert_equal RailsAssetCompiler, asset_compiler.class
+      end
+
+      def test_null_asset_compiler_set_when_no_rails_environment_detected
+        exit_rails_env
+        asset_compiler = app.instance_variable_get('@asset_compiler')
+        assert_equal NullAssetCompiler, asset_compiler.class
       end
 
       def test_request_for_non_asset_path_beginning_with_assets_dir_name_bypasses_middleware
@@ -146,13 +158,6 @@ module Rack
         assert_nil last_response.headers['vary']
       end
 
-      def assert_raises_illegal_path_error(path)
-        e = assert_raises SecurityError do
-          get path
-        end
-        assert_equal 'Illegal path requested', e.message
-      end
-
       def test_throws_exception_if_path_contains_hidden_dir
         paths = ['.confidential/secret-plans.pdf', '/.you-aint-seen-me/index.html', '/nothing/.to/see/here.jpg']
         paths.each do |path|
@@ -239,6 +244,14 @@ module Rack
 
       DURATIONS_IN_SECS = {:year => 31536000, :month => 2678400, :day => 86400}.freeze
 
+      def app
+        if in_rails_env?
+          return AssetServer.new(create_rack_app)
+        end
+        # In a pure rack app, non-Rails env
+        return AssetServer.new(create_rack_app, asset_root)
+      end
+
       def create_rack_app
         status = 200
         headers = {}
@@ -287,6 +300,13 @@ module Rack
       def assert_not_found(msg=nil)
         assert_equal 404, last_response.status, msg
         assert_equal 'Not Found', last_response.body, msg
+      end
+
+      def assert_raises_illegal_path_error(path)
+        e = assert_raises SecurityError do
+          get path
+        end
+        assert_equal 'Illegal path requested', e.message
       end
 
     end
