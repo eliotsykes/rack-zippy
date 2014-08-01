@@ -33,6 +33,8 @@ end
 
 class TestCase < ::Test::Unit::TestCase
 
+  DURATIONS_IN_SECS = {:year => 31536000, :month => 2678400, :day => 86400}.freeze
+
   def ensure_correct_working_directory
     is_project_root_working_directory = ::File.exists?('rack-zippy.gemspec')
     if is_project_root_working_directory

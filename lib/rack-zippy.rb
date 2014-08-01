@@ -39,44 +39,127 @@ module Rack
       end
     end
 
+    # TODO: Move ServeableFile to serveable_file.rb
     class ServeableFile
 
-      attr_reader :path
+      attr_reader :path, :path_info
 
-      def initialize(path)
-        @path = path
+      def initialize(options)
+        raise ArgumentError.new(':has_encoding_variants option must be given') unless options.has_key?(:has_encoding_variants)
+
+        @path = options[:path]
+        @path_info = options[:path_info]
+        @has_encoding_variants = options[:has_encoding_variants]
+        @is_gzipped = options[:is_gzipped]
       end
 
-      def self.find_all(options)
-        path_info = options[:path_info]
-        asset_root = options[:asset_root]
-        file_path = options[:path]
-        asset_compiler = options[:asset_compiler]
+      def headers
+        headers = { 'Content-Type'  => Rack::Mime.mime_type(::File.extname(path_info)) }
+        headers.merge! cache_headers
 
-        serveable_files = []
+        headers['Vary'] = 'Accept-Encoding' if encoding_variants?
+        headers['Content-Encoding'] = 'gzip' if gzipped?
 
-        is_serveable = has_static_extension?(path_info) &&
-            ::File.file?(file_path) &&
-            ::File.readable?(file_path) &&
-            !asset_compiler.compiles?(path_info)
+        headers['Content-Length'] = ::File.size(path).to_s
+        return headers
+      end
 
-        if is_serveable
-          serveable_files << ServeableFile.new(file_path)
+      def cache_headers
+        case path_info
+          when PRECOMPILED_ASSETS_SUBDIR_REGEX
+            lifetime = :year
+            last_modified = CACHE_FRIENDLY_LAST_MODIFIED
+          when '/favicon.ico'
+            lifetime = :month
+            last_modified = CACHE_FRIENDLY_LAST_MODIFIED
+          else
+            lifetime = :day
         end
 
-        return serveable_files
+        headers = { 'Cache-Control' => "public, max-age=#{SECONDS_IN[lifetime]}" }
+        headers['Last-Modified'] = last_modified if last_modified
+
+        return headers
+      end
+
+      def response_body
+        [::File.read(path)]
+      end
+
+      def self.find_first(options)
+        path_info = options[:path_info]
+        asset_compiler = options[:asset_compiler]
+
+        is_path_info_serveable = has_static_extension?(path_info) && !asset_compiler.compiles?(path_info)
+
+        if !is_path_info_serveable
+          return nil
+        end
+
+        asset_root = options[:asset_root]
+        file_path = options[:path]
+        include_gzipped = options[:include_gzipped]
+
+        gzipped_file_path = "#{file_path}.gz"
+        gzipped_file_present = ::File.file?(gzipped_file_path) && ::File.readable?(gzipped_file_path)
+
+        has_encoding_variants = gzipped_file_present
+
+        if include_gzipped && gzipped_file_present
+          return ServeableFile.new(
+              :path => gzipped_file_path,
+              :path_info => path_info,
+              :has_encoding_variants => has_encoding_variants,
+              :is_gzipped => true
+          )
+        end
+
+        is_serveable = ::File.file?(file_path) && ::File.readable?(file_path)
+
+        if is_serveable
+          return ServeableFile.new(
+              :path => file_path,
+              :path_info => path_info,
+              :has_encoding_variants => has_encoding_variants
+          )
+        end
+
+        return nil
       end
 
       def self.has_static_extension?(path)
         path =~ AssetServer::STATIC_EXTENSION_REGEX
       end
 
+      def encoding_variants?
+        return @has_encoding_variants
+      end
+
+      def gzipped?
+        return @is_gzipped
+      end
+
       def ==(other)
         return false if other.nil?
         return true if self.equal?(other)
-        return self.class == other.class && self.path == other.path
+        return self.class == other.class &&
+          self.gzipped? == other.gzipped? &&
+          self.encoding_variants? == other.encoding_variants? &&
+          self.path == other.path &&
+          self.path_info == other.path_info
       end
       alias_method :eql?, :==
+
+      private
+
+      # Old last-modified headers encourage caching via browser heuristics. Use it for year-long cached assets.
+      CACHE_FRIENDLY_LAST_MODIFIED = 'Mon, 10 Jan 2005 10:00:00 GMT'
+
+      SECONDS_IN = {
+          :day => 24*60*60,
+          :month => 31*(24*60*60),
+          :year => 365*(24*60*60)
+      }.freeze
 
     end
 
@@ -84,6 +167,8 @@ module Rack
 
       # Font extensions: woff, woff2, ttf, eot, otf
       STATIC_EXTENSION_REGEX = /\.(?:css|js|html|htm|txt|ico|png|jpg|jpeg|gif|pdf|svg|zip|gz|eps|psd|ai|woff|woff2|ttf|eot|otf|swf)\z/i
+
+      HTTP_STATUS_CODE_OK = 200.freeze
 
       def initialize(app, asset_root=nil)
         if asset_root.nil?
@@ -105,33 +190,16 @@ module Rack
 
         file_path = path_to_file(path_info)
 
-        serveable_files = ServeableFile.find_all(
+        serveable_file = ServeableFile.find_first(
             :path_info => path_info,
             :asset_root => @asset_root,
             :path => file_path,
-            :asset_compiler => @asset_compiler
+            :asset_compiler => @asset_compiler,
+            :include_gzipped => client_accepts_gzip?(env)
         )
 
-        unless serveable_files.empty?
-          headers = { 'Content-Type'  => Rack::Mime.mime_type(::File.extname(path_info)) }
-          headers.merge! cache_headers(path_info)
-
-          gzipped_file_path = "#{file_path}.gz"
-          gzipped_file_present = ::File.exists?(gzipped_file_path) && ::File.readable?(gzipped_file_path)
-
-          if gzipped_file_present
-            headers['Vary'] = 'Accept-Encoding'
-
-            if client_accepts_gzip?(env)
-              file_path = gzipped_file_path
-              headers['Content-Encoding'] = 'gzip'
-            end
-          end
-
-          status = 200
-          headers['Content-Length'] = ::File.size(file_path).to_s
-          response_body = [::File.read(file_path)]
-          return [status, headers, response_body]
+        if serveable_file
+          return [HTTP_STATUS_CODE_OK, serveable_file.headers, serveable_file.response_body]
         end
 
         @app.call(env)
@@ -139,36 +207,9 @@ module Rack
 
       private
 
-      SECONDS_IN = {
-          :day => 24*60*60,
-          :month => 31*(24*60*60),
-          :year => 365*(24*60*60)
-      }.freeze
-
       ACCEPTS_GZIP_REGEX = /\bgzip\b/
 
       ILLEGAL_PATH_REGEX = /(\.\.|\/\.)/
-
-      # Old last-modified headers encourage caching via browser heuristics. Use it for year-long cached assets.
-      CACHE_FRIENDLY_LAST_MODIFIED = 'Mon, 10 Jan 2005 10:00:00 GMT'
-
-      def cache_headers(path_info)
-        case path_info
-          when PRECOMPILED_ASSETS_SUBDIR_REGEX
-            lifetime = :year
-            last_modified = CACHE_FRIENDLY_LAST_MODIFIED
-          when '/favicon.ico'
-            lifetime = :month
-            last_modified = CACHE_FRIENDLY_LAST_MODIFIED
-          else
-            lifetime = :day
-        end
-
-        headers = { 'Cache-Control' => "public, max-age=#{SECONDS_IN[lifetime]}" }
-        headers['Last-Modified'] = last_modified if last_modified
-
-        return headers
-      end
 
       def path_to_file(path_info)
         "#{@asset_root}#{path_info}"

@@ -242,8 +242,6 @@ module Rack
 
       private
 
-      DURATIONS_IN_SECS = {:year => 31536000, :month => 2678400, :day => 86400}.freeze
-
       def app
         if in_rails_env?
           return AssetServer.new(create_rack_app)

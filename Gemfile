@@ -4,6 +4,7 @@ source 'https://rubygems.org'
 gemspec
 
 group :development do
-  gem 'rake'
+  gem 'guard-test'
   gem 'rack-test'
+  gem 'rake'
 end
