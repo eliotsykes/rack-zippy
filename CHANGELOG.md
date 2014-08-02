@@ -2,6 +2,7 @@
 - Rack Zippy now works cleanly with all Rack apps, including Rails apps ([#23](https://github.com/eliotsykes/rack-zippy/issues/23))
 - Decomposed AssetServer into AssetServer, ServeableFile, and AssetCompiler classes
 - Installation notes for non-Rails Rack apps added to README.md
+**WORK IN PROGRESS** Smarter handling of directory requests to match behaviour of Rails Static middleware ([#15](https://github.com/eliotsykes/rack-zippy/issues/15))       
 
 ## 1.2.1 / 2014-07-09
 - Use absolute (not relative) path for default asset_root ([#11](https://github.com/eliotsykes/rack-zippy/issues/11))

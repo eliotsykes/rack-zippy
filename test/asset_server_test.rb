@@ -16,6 +16,18 @@ module Rack
         revert_to_original_working_directory
       end
 
+      def test_serves_static_index_at_root
+        valid_root_paths = [
+          '/index.html', '/index', '/', ''
+        ]
+        valid_root_paths.each do |root|
+          get root
+          assert_response_ok
+          assert_content_type 'text/html', "Wrong content type for GET '#{root}'"
+          assert_content_length 'public/index.html'
+        end
+      end
+
       def test_static_extension_regexp_available_in_established_constant_for_monkey_patching
         assert AssetServer.const_defined?(:STATIC_EXTENSION_REGEX)
       end
@@ -196,7 +208,7 @@ module Rack
       end
 
       def test_passes_not_found_asset_requests_onto_app
-        get '/index.html'
+        get '/foo.html'
         assert_underlying_app_responded
       end
 
@@ -287,8 +299,8 @@ module Rack
         assert_equal 200, last_response.status
       end
 
-      def assert_content_type(expected_content_type)
-        assert_equal expected_content_type, last_response.headers['content-type']
+      def assert_content_type(expected_content_type, message=nil)
+        assert_equal expected_content_type, last_response.headers['content-type'], message
       end
 
       def assert_content_length(path)

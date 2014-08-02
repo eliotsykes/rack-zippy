@@ -16,9 +16,21 @@ module Rack
         revert_to_original_working_directory
       end
 
+      def test_build_full_path_info_for_root_index_paths_returns_index_html
+        ['/', '/index', '/', '/index.html'].each do |root_path_info|
+          assert_equal '/index.html', ServeableFile.build_full_path_info(root_path_info)
+        end
+      end
+
+      def test_build_full_path_info_for_ordinary_paths_returns_given_path_info
+        ['/blah.html', '/favicon.ico', '/assets/application.css'].each do |path_info|
+          assert_equal path_info, ServeableFile.build_full_path_info(path_info)
+        end
+      end
+
       def test_day_long_cache_headers_for_root_html_requests
         serveable_file = ServeableFile.new(
-          :path_info => "/thanks.html",
+          :full_path_info => "/thanks.html",
           :path => "#{asset_root}/thanks.html",
           :has_encoding_variants => false,
           :is_gzipped => false
@@ -32,7 +44,7 @@ module Rack
 
       def test_cache_max_age_is_month_for_root_favicon
         serveable_file = ServeableFile.new(
-          :path_info => "/favicon.ico",
+          :full_path_info => "/favicon.ico",
           :path => "#{asset_root}/favicon.ico",
           :has_encoding_variants => false,
           :is_gzipped => false
@@ -43,7 +55,7 @@ module Rack
 
       def test_maximum_cache_headers_for_assets_subdir_requests
         serveable_file = ServeableFile.new(
-          :path_info => "/assets/favicon.ico",
+          :full_path_info => "/assets/favicon.ico",
           :path => "#{asset_root}/assets/favicon.ico",
           :has_encoding_variants => false,
           :is_gzipped => false
@@ -57,7 +69,7 @@ module Rack
 
       def test_cache_friendly_last_modified_is_not_set_for_files_outside_of_assets_subdir
         serveable_file = ServeableFile.new(
-          :path_info => "/robots.txt",
+          :full_path_info => "/robots.txt",
           :path => "#{asset_root}/robots.txt",
           :has_encoding_variants => false,
           :is_gzipped => false
@@ -68,7 +80,7 @@ module Rack
 
       def test_cache_friendly_last_modified_is_set_for_root_favicon_as_it_rarely_changes
         serveable_file = ServeableFile.new(
-          :path_info => "/favicon.ico",
+          :full_path_info => "/favicon.ico",
           :path => "#{asset_root}/favicon.ico",
           :has_encoding_variants => false,
           :is_gzipped => false
@@ -81,7 +93,7 @@ module Rack
         path = "#{asset_root}/thanks.html"
 
         serveable_file = ServeableFile.new(
-          :path_info => "/thanks.html",
+          :full_path_info => "/thanks.html",
           :path => path,
           :has_encoding_variants => false,
           :is_gzipped => false
@@ -90,13 +102,13 @@ module Rack
         headers = serveable_file.headers
 
         file_size_in_bytes = ::File.size(path)
-        assert_equal 92, file_size_in_bytes
+        assert_equal 108, file_size_in_bytes
         assert_equal file_size_in_bytes, headers['Content-Length'].to_i
       end
 
       def test_headers_does_not_set_vary_header_for_file_without_gzipped_counterpart
         serveable_file = ServeableFile.new(
-          :path_info => "/thanks.html",
+          :full_path_info => "/thanks.html",
           :path => "#{asset_root}/thanks.html",
           :has_encoding_variants => false,
           :is_gzipped => false
@@ -110,7 +122,7 @@ module Rack
 
       def test_headers_sets_encoding_related_headers_for_gzipped_asset
         serveable_file = ServeableFile.new(
-          :path_info => "/assets/application.css",
+          :full_path_info => "/assets/application.css",
           :path => "#{asset_root}/assets/application.css.gz",
           :has_encoding_variants => true,
           :is_gzipped => true
@@ -124,7 +136,7 @@ module Rack
 
       def test_headers_sets_vary_header_for_uncompressed_asset_with_gzipped_counterpart
         serveable_file = ServeableFile.new(
-          :path_info => "/assets/application.css",
+          :full_path_info => "/assets/application.css",
           :path => "#{asset_root}/assets/application.css",
           :has_encoding_variants => true,
           :is_gzipped => false
@@ -138,7 +150,7 @@ module Rack
 
       def test_headers_sets_content_type_header_for_gzipped_asset
         serveable_file = ServeableFile.new(
-          :path_info => "/assets/application.js",
+          :full_path_info => "/assets/application.js",
           :path => "#{asset_root}/assets/application.js.gz",
           :has_encoding_variants => true,
           :is_gzipped => true
@@ -195,12 +207,12 @@ module Rack
 
       def test_serveable_files_with_same_options_are_equal
         file1 = ServeableFile.new :path => "#{asset_root}/hello/world.html.gz",
-                                  :path_info => '/hello/world.html',
+                                  :full_path_info => '/hello/world.html',
                                   :has_encoding_variants => true,
                                   :is_gzipped => true
 
         file2 = ServeableFile.new :path => "#{asset_root}/hello/world.html.gz",
-                                  :path_info => '/hello/world.html',
+                                  :full_path_info => '/hello/world.html',
                                   :has_encoding_variants => true,
                                   :is_gzipped => true
 
@@ -212,12 +224,12 @@ module Rack
 
       def test_serveable_files_with_different_paths_are_not_equal
         file1 = ServeableFile.new :path => "#{asset_root}/hello/world.html.gz",
-                                  :path_info => '/hello/world.html',
+                                  :full_path_info => '/hello/world.html',
                                   :has_encoding_variants => true,
                                   :is_gzipped => true
 
         file2 = ServeableFile.new :path => "#{asset_root}/foo/bar.html.gz",
-                                  :path_info => '/hello/world.html',
+                                  :full_path_info => '/hello/world.html',
                                   :has_encoding_variants => true,
                                   :is_gzipped => true
 
@@ -229,12 +241,12 @@ module Rack
 
       def test_serveable_files_with_different_path_info_are_not_equal
         file1 = ServeableFile.new :path => "#{asset_root}/hello/world.html.gz",
-                                  :path_info => '/hello/world.html',
+                                  :full_path_info => '/hello/world.html',
                                   :has_encoding_variants => true,
                                   :is_gzipped => true
 
         file2 = ServeableFile.new :path => "#{asset_root}/hello/world.html.gz",
-                                  :path_info => '/foo/bar.html',
+                                  :full_path_info => '/foo/bar.html',
                                   :has_encoding_variants => true,
                                   :is_gzipped => true
 
@@ -246,12 +258,12 @@ module Rack
 
       def test_serveable_files_with_different_has_encoding_variants_are_not_equal
         file1 = ServeableFile.new :path => "#{asset_root}/hello/world.html.gz",
-                                  :path_info => '/hello/world.html',
+                                  :full_path_info => '/hello/world.html',
                                   :has_encoding_variants => true,
                                   :is_gzipped => true
 
         file2 = ServeableFile.new :path => "#{asset_root}/hello/world.html.gz",
-                                  :path_info => '/hello/world.html',
+                                  :full_path_info => '/hello/world.html',
                                   :has_encoding_variants => false,
                                   :is_gzipped => true
 
@@ -263,12 +275,12 @@ module Rack
 
       def test_serveable_files_with_different_is_gzipped_are_not_equal
         file1 = ServeableFile.new :path => "#{asset_root}/hello/world.html",
-                                  :path_info => '/hello/world.html',
+                                  :full_path_info => '/hello/world.html',
                                   :has_encoding_variants => true,
                                   :is_gzipped => false
 
         file2 = ServeableFile.new :path => "#{asset_root}/hello/world.html",
-                                  :path_info => '/hello/world.html',
+                                  :full_path_info => '/hello/world.html',
                                   :has_encoding_variants => true,
                                   :is_gzipped => true
 
@@ -280,12 +292,12 @@ module Rack
 
       def test_gzipped_serveable_file_does_not_equal_its_non_gzipped_counterpart
         gzipped = ServeableFile.new :path => "#{asset_root}/hello/world.html.gz",
-                                  :path_info => '/hello/world.html',
+                                  :full_path_info => '/hello/world.html',
                                   :has_encoding_variants => true,
                                   :is_gzipped => true
 
         not_gzipped = ServeableFile.new :path => "#{asset_root}/hello/world.html",
-                                  :path_info => '/hello/world.html',
+                                  :full_path_info => '/hello/world.html',
                                   :has_encoding_variants => true,
                                   :is_gzipped => false
 
@@ -293,6 +305,24 @@ module Rack
         assert_not_equal not_gzipped, gzipped
         assert !gzipped.eql?(not_gzipped)
         assert !not_gzipped.eql?(gzipped)
+      end
+
+      def test_find_first_finds_static_index_at_root
+        valid_root_paths = [
+          '/index.html', '/index', '/', ''
+        ]
+        valid_root_paths.each do |root|
+
+          serveable_file = ServeableFile.find_first(
+            :path_info => root,
+            :asset_compiler => NullAssetCompiler.new,
+            :asset_root => asset_root,
+            :include_gzipped => false
+          )
+
+          assert serveable_file, "ServeableFile should be found for root path info '#{root}'"
+          assert_equal "#{asset_root}/index.html", serveable_file.path
+        end
       end
 
       def test_find_first_finds_nothing_for_non_static_extension
@@ -321,13 +351,12 @@ module Rack
           :path_info => "/assets/application.css",
           :asset_compiler => NullAssetCompiler.new,
           :asset_root => asset_root,
-          :path => "#{asset_root}/assets/application.css",
           :include_gzipped => true
         )
         
         assert_equal "#{asset_root}/assets/application.css.gz", result.path,
             "gzipped file variant should be found"
-        assert_equal "/assets/application.css", result.path_info
+        assert_equal "/assets/application.css", result.full_path_info
         assert result.encoding_variants?
         assert result.gzipped?
       end
@@ -337,13 +366,12 @@ module Rack
           :path_info => "/assets/application.css",
           :asset_compiler => NullAssetCompiler.new,
           :asset_root => asset_root,
-          :path => "#{asset_root}/assets/application.css",
           :include_gzipped => false
         )
         
         assert_equal "#{asset_root}/assets/application.css", result.path,
             "non-gzipped file variant should be found"
-        assert_equal "/assets/application.css", result.path_info
+        assert_equal "/assets/application.css", result.full_path_info
         assert result.encoding_variants?
         assert !result.gzipped?
       end
@@ -353,12 +381,11 @@ module Rack
           :path_info => "/thanks.html",
           :asset_compiler => NullAssetCompiler.new,
           :asset_root => asset_root,
-          :path => "#{asset_root}/thanks.html",
           :include_gzipped => true
         )
 
         assert_equal "#{asset_root}/thanks.html", result.path
-        assert_equal "/thanks.html", result.path_info
+        assert_equal "/thanks.html", result.full_path_info
         assert !result.encoding_variants?
         assert !result.gzipped?
       end
@@ -368,7 +395,6 @@ module Rack
           :path_info => '/about.html',
           :asset_compiler => NullAssetCompiler.new,
           :asset_root => asset_root,
-          :path => "#{asset_root}/about.html",
           :include_gzipped => false
         )
       end
