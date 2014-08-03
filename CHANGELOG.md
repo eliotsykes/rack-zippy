@@ -3,8 +3,8 @@
 - Decomposed AssetServer into AssetServer, ServeableFile, and AssetCompiler classes
 - Installation notes for non-Rails Rack apps added to README.md
 - Smarter handling of directory requests to match behaviour of Rails Static middleware ([#15](https://github.com/eliotsykes/rack-zippy/issues/15))
-    - Requests for ['/', '/index'] respond with 'public/index.html' if present
-    - Requests for ['/foo/', '/foo'] respond with first file present out of ['public/foo.html', 'public/foo/index.html'] (same behaviour for subdirectories)
+    - Requests for `/` and `/index` respond with `public/index.html` if present
+    - Requests for `/foo/` and `/foo` respond with first file present out of `public/foo.html`, `public/foo/index.html` (Same behaviour for subdirectories)
 
 ## 1.2.1 / 2014-07-09
 - Use absolute (not relative) path for default asset_root ([#11](https://github.com/eliotsykes/rack-zippy/issues/11))
