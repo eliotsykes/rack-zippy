@@ -16,16 +16,19 @@ module Rack
         revert_to_original_working_directory
       end
 
+      def test_serves_static_index_in_directory
+        directory_index_html = 'public/foo/index.html'
+        assert_responds_with_html_file '/foo/index.html', directory_index_html
+        assert_responds_with_html_file '/foo/', directory_index_html
+        assert_responds_with_html_file '/foo', directory_index_html
+      end
+
       def test_serves_static_index_at_root
-        valid_root_paths = [
-          '/index.html', '/index', '/', ''
-        ]
-        valid_root_paths.each do |root|
-          get root
-          assert_response_ok
-          assert_content_type 'text/html', "Wrong content type for GET '#{root}'"
-          assert_content_length 'public/index.html'
-        end
+        index_html_file = 'public/index.html'
+        assert_responds_with_html_file '/index.html', 'public/index.html'
+        assert_responds_with_html_file '/index', 'public/index.html'
+        assert_responds_with_html_file '/', 'public/index.html'
+        assert_responds_with_html_file '', 'public/index.html'
       end
 
       def test_static_extension_regexp_available_in_established_constant_for_monkey_patching
@@ -189,10 +192,7 @@ module Rack
       end
 
       def test_serves_html
-        get '/thanks.html'
-        assert_response_ok
-        assert_content_type 'text/html'
-        assert_content_length 'public/thanks.html'
+        assert_responds_with_html_file '/thanks.html', 'public/thanks.html'
       end
 
       def test_serves_robots_txt
@@ -295,6 +295,14 @@ module Rack
         assert_equal 'Up above the streets and houses', last_response.body
       end
 
+      def assert_responds_with_html_file(path_info, expected_html_file)
+        get path_info
+        assert_response_ok
+        assert_content_type 'text/html', "Wrong content type for GET '#{path_info}'"
+        assert_content_length expected_html_file
+        assert_equal ::IO.read(expected_html_file), last_response.body
+      end
+
       def assert_response_ok
         assert_equal 200, last_response.status
       end
@@ -304,7 +312,7 @@ module Rack
       end
 
       def assert_content_length(path)
-        assert_equal ::File.size(path).to_s, last_response.headers['content-length']
+        assert_equal ::File.size(path).to_s, last_response.headers['content-length'], "Unexpected Content-Length header"
       end
 
       def assert_not_found(msg=nil)

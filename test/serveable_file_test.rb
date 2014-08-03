@@ -16,18 +16,6 @@ module Rack
         revert_to_original_working_directory
       end
 
-      def test_build_full_path_info_for_root_index_paths_returns_index_html
-        ['/', '/index', '/', '/index.html'].each do |root_path_info|
-          assert_equal '/index.html', ServeableFile.build_full_path_info(root_path_info)
-        end
-      end
-
-      def test_build_full_path_info_for_ordinary_paths_returns_given_path_info
-        ['/blah.html', '/favicon.ico', '/assets/application.css'].each do |path_info|
-          assert_equal path_info, ServeableFile.build_full_path_info(path_info)
-        end
-      end
-
       def test_day_long_cache_headers_for_root_html_requests
         serveable_file = ServeableFile.new(
           :full_path_info => "/thanks.html",
@@ -307,6 +295,22 @@ module Rack
         assert !not_gzipped.eql?(gzipped)
       end
 
+      def test_find_first_finds_static_index_in_directory
+        paths = ['/foo/index.html', '/foo/', '/foo']
+        paths.each do |path|
+          serveable_file = ServeableFile.find_first(
+            :path_info => path,
+            :asset_compiler => NullAssetCompiler.new,
+            :asset_root => asset_root,
+            :include_gzipped => false
+          )
+
+          assert serveable_file, "ServeableFile should be found for path info '#{path}'"
+          assert_equal "#{asset_root}/foo/index.html", serveable_file.path
+          assert_equal "/foo/index.html", serveable_file.full_path_info
+        end
+      end
+
       def test_find_first_finds_static_index_at_root
         valid_root_paths = [
           '/index.html', '/index', '/', ''
@@ -322,11 +326,15 @@ module Rack
 
           assert serveable_file, "ServeableFile should be found for root path info '#{root}'"
           assert_equal "#{asset_root}/index.html", serveable_file.path
+          assert_equal "/index.html", serveable_file.full_path_info
         end
       end
 
       def test_find_first_finds_nothing_for_non_static_extension
-        assert_nil ServeableFile.find_first(:path_info => '/about')
+        assert_nil ServeableFile.find_first(
+            :path_info => '/about',
+            :asset_compiler => NullAssetCompiler.new
+        )
       end
 
       def test_find_first_finds_nothing_for_compileable_path_info

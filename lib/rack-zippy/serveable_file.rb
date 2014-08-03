@@ -48,17 +48,34 @@ module Rack
 
       def self.find_first(options)
         asset_compiler = options[:asset_compiler]
-        full_path_info = build_full_path_info(options[:path_info])
+        path_info = options[:path_info].chomp('/')
         
-        is_path_info_serveable = has_static_extension?(full_path_info) && !asset_compiler.compiles?(full_path_info)
-        return nil if !is_path_info_serveable
+        return nil if asset_compiler.compiles?(path_info)
 
         asset_root = options[:asset_root]
-        file_path = "#{asset_root}#{full_path_info}"
+
+        if ROOT_INDEX_ALIASES.include?(path_info)
+          full_path_info = '/index.html'
+          file_path = "#{asset_root}#{full_path_info}"
+          is_serveable = readable_file?(file_path)
+        else
+          full_path_info = path_info
+          file_path = "#{asset_root}#{full_path_info}"
+          is_serveable = readable_file?(file_path)
+
+          if !is_serveable && ::File.directory?(file_path)
+            full_path_info = "#{full_path_info}/index.html"
+            file_path = "#{file_path}/index.html"
+            is_serveable = readable_file?(file_path)
+          end
+        end
+
+        return nil if !is_serveable || !has_static_extension?(full_path_info)
+
         include_gzipped = options[:include_gzipped]
 
         gzipped_file_path = "#{file_path}.gz"
-        gzipped_file_present = ::File.file?(gzipped_file_path) && ::File.readable?(gzipped_file_path)
+        gzipped_file_present = readable_file?(gzipped_file_path)
 
         has_encoding_variants = gzipped_file_present
 
@@ -71,17 +88,11 @@ module Rack
           )
         end
 
-        is_serveable = ::File.file?(file_path) && ::File.readable?(file_path)
-
-        if is_serveable
-          return ServeableFile.new(
-              :path => file_path,
-              :full_path_info => full_path_info,
-              :has_encoding_variants => has_encoding_variants
-          )
-        end
-
-        return nil
+        return ServeableFile.new(
+            :path => file_path,
+            :full_path_info => full_path_info,
+            :has_encoding_variants => has_encoding_variants
+        )
       end
 
       def self.has_static_extension?(path)
@@ -118,13 +129,10 @@ module Rack
           :year => 365*(24*60*60)
       }.freeze
 
-      ROOT_INDEX_ALIASES = ['/index', '/', ''].freeze
+      ROOT_INDEX_ALIASES = ['/index', ''].freeze
 
-      def self.build_full_path_info(path_info)
-        if ROOT_INDEX_ALIASES.include?(path_info)
-          return '/index.html'
-        end
-        return path_info
+      def self.readable_file?(file_path)
+        return ::File.file?(file_path) && ::File.readable?(file_path)
       end
 
     end
