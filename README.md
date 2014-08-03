@@ -9,6 +9,11 @@ rack-zippy replaces the ActionDispatch::Static middleware used by Rails, which i
 the `rake assets:precompile` task. rack-zippy will serve non-gzipped assets where they are not available or not supported by the
 requesting client.
 
+rack-zippy (since 2.0.0) has the same convenient directory request handling provided by ActionDispatch::Static, which means you can take advantage of this in any rack app:
+
+- Requests for ['/', '/index'] respond with 'public/index.html' if present
+- Requests for ['/foo/', '/foo'] respond with first file present out of ['public/foo.html', 'public/foo/index.html'] (same behaviour for subdirectories)
+
 Watch the [Web Dev Break podcast on rack-zippy](http://www.webdevbreak.com/specials/rack-zippy "Faster, friendlier assets with rack-zippy") to see how you can check if your app
 is currently serving uncompressed assets and how quick it is to setup rack-zippy:
 
