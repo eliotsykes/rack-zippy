@@ -16,6 +16,13 @@ module Rack
         revert_to_original_working_directory
       end
 
+      def test_serves_static_file_as_directory
+        expected_html_file = 'public/foo/bar.html'
+        assert_responds_with_html_file '/foo/bar.html', expected_html_file
+        assert_responds_with_html_file '/foo/bar/', expected_html_file
+        assert_responds_with_html_file '/foo/bar', expected_html_file
+      end
+
       def test_serves_static_index_in_directory
         directory_index_html = 'public/foo/index.html'
         assert_responds_with_html_file '/foo/index.html', directory_index_html

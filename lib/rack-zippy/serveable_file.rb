@@ -55,22 +55,23 @@ module Rack
         asset_root = options[:asset_root]
 
         if ROOT_INDEX_ALIASES.include?(path_info)
-          full_path_info = '/index.html'
-          file_path = "#{asset_root}#{full_path_info}"
-          is_serveable = readable_file?(file_path)
+          candidate_path_infos = ["/index#{DEFAULT_STATIC_EXTENSION}"]
         else
-          full_path_info = path_info
-          file_path = "#{asset_root}#{full_path_info}"
-          is_serveable = readable_file?(file_path)
-
-          if !is_serveable && ::File.directory?(file_path)
-            full_path_info = "#{full_path_info}/index.html"
-            file_path = "#{file_path}/index.html"
-            is_serveable = readable_file?(file_path)
-          end
+          candidate_path_infos = [
+            path_info,
+            "#{path_info}#{DEFAULT_STATIC_EXTENSION}",
+            "#{path_info}/index#{DEFAULT_STATIC_EXTENSION}",
+          ]
         end
 
-        return nil if !is_serveable || !has_static_extension?(full_path_info)
+        file_path = nil
+
+        full_path_info = candidate_path_infos.find do |candidate_path_info|
+          file_path = "#{asset_root}#{candidate_path_info}"
+          readable_file?(file_path)
+        end
+
+        return nil if full_path_info.nil? || !has_static_extension?(full_path_info)
 
         include_gzipped = options[:include_gzipped]
 
@@ -130,6 +131,8 @@ module Rack
       }.freeze
 
       ROOT_INDEX_ALIASES = ['/index', ''].freeze
+
+      DEFAULT_STATIC_EXTENSION = '.html'.freeze
 
       def self.readable_file?(file_path)
         return ::File.file?(file_path) && ::File.readable?(file_path)
