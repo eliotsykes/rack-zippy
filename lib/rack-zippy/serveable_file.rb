@@ -54,15 +54,12 @@ module Rack
 
         asset_root = options[:asset_root]
 
-        if ROOT_INDEX_ALIASES.include?(path_info)
-          candidate_path_infos = ["/index#{DEFAULT_STATIC_EXTENSION}"]
-        else
-          candidate_path_infos = [
-            path_info,
-            "#{path_info}#{DEFAULT_STATIC_EXTENSION}",
-            "#{path_info}/index#{DEFAULT_STATIC_EXTENSION}",
-          ]
+        candidate_path_infos = []
+        if !path_info.empty?
+          candidate_path_infos << path_info
+          candidate_path_infos << "#{path_info}#{DEFAULT_STATIC_EXTENSION}"
         end
+        candidate_path_infos << "#{path_info}/index#{DEFAULT_STATIC_EXTENSION}"
 
         file_path = nil
 
@@ -129,8 +126,6 @@ module Rack
           :month => 31*(24*60*60),
           :year => 365*(24*60*60)
       }.freeze
-
-      ROOT_INDEX_ALIASES = ['/index', ''].freeze
 
       DEFAULT_STATIC_EXTENSION = '.html'.freeze
 

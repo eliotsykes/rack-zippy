@@ -295,6 +295,22 @@ module Rack
         assert !not_gzipped.eql?(gzipped)
       end
 
+      def test_find_first_finds_static_file_as_directory
+        paths = ['/foo/bar.html', '/foo/bar/', '/foo/bar']
+        paths.each do |path|
+          serveable_file = ServeableFile.find_first(
+            :path_info => path,
+            :asset_compiler => NullAssetCompiler.new,
+            :asset_root => asset_root,
+            :include_gzipped => false
+          )
+
+          assert serveable_file, "ServeableFile should be found for path info '#{path}'"
+          assert_equal "#{asset_root}/foo/bar.html", serveable_file.path
+          assert_equal "/foo/bar.html", serveable_file.full_path_info
+        end
+      end
+
       def test_find_first_finds_static_index_in_directory
         paths = ['/foo/index.html', '/foo/', '/foo']
         paths.each do |path|
