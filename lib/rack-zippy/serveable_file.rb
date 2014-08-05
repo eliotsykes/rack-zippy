@@ -64,7 +64,7 @@ module Rack
         file_path = nil
 
         full_path_info = candidate_path_infos.find do |candidate_path_info|
-          file_path = "#{asset_root}#{candidate_path_info}"
+          file_path = ::File.join(asset_root, candidate_path_info)
           readable_file?(file_path)
         end
 

@@ -349,7 +349,8 @@ module Rack
       def test_find_first_finds_nothing_for_non_static_extension
         assert_nil ServeableFile.find_first(
             :path_info => '/about',
-            :asset_compiler => NullAssetCompiler.new
+            :asset_compiler => NullAssetCompiler.new,
+            :asset_root => asset_root
         )
       end
 
