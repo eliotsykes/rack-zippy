@@ -6,6 +6,7 @@
     - Requests for `/` and `/index` respond with `public/index.html` if present
     - Requests for `/foo/` and `/foo` respond with first file present out of `public/foo.html`, `public/foo/index.html` (Same behaviour for subdirectories)
 - Use File.join to build file path ([#34](https://github.com/eliotsykes/rack-zippy/issues/34))
+- Respond with 404 Not Found instead of raising SecurityError for illegal paths ([#17](https://github.com/eliotsykes/rack-zippy/issues/17))
 
 ## 1.2.1 / 2014-07-09
 - Use absolute (not relative) path for default asset_root ([#11](https://github.com/eliotsykes/rack-zippy/issues/11))

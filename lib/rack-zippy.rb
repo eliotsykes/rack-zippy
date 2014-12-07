@@ -12,7 +12,7 @@ module Rack
       # Font extensions: woff, woff2, ttf, eot, otf
       STATIC_EXTENSION_REGEX = /\.(?:css|js|html|htm|txt|ico|png|jpg|jpeg|gif|pdf|svg|zip|gz|eps|psd|ai|woff|woff2|ttf|eot|otf|swf)\z/i
 
-      HTTP_STATUS_CODE_OK = 200.freeze
+      HTTP_STATUS_CODE_OK = 200
 
       def initialize(app, asset_root=nil)
         if asset_root.nil?
@@ -30,7 +30,8 @@ module Rack
 
       def call(env)
         path_info = env['PATH_INFO']
-        assert_legal_path path_info
+
+        return not_found_response if path_info =~ ILLEGAL_PATH_REGEX
 
         serveable_file = ServeableFile.find_first(
             :path_info => path_info,
@@ -56,13 +57,13 @@ module Rack
         rack_env['HTTP_ACCEPT_ENCODING'] =~ ACCEPTS_GZIP_REGEX
       end
 
-      def assert_legal_path(path_info)
-        raise SecurityError.new('Illegal path requested') if path_info =~ ILLEGAL_PATH_REGEX
-      end
-
       def resolve_asset_compiler
         asset_compiler_class = RailsAssetCompiler.rails_env? ? RailsAssetCompiler : NullAssetCompiler
         return asset_compiler_class.new
+      end
+
+      def not_found_response
+        [404, {}, ['Not Found']]
       end
 
     end

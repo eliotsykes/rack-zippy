@@ -180,22 +180,27 @@ module Rack
         assert_nil last_response.headers['vary']
       end
 
-      def test_throws_exception_if_path_contains_hidden_dir
+      def test_responds_not_found_if_path_contains_hidden_dir
         paths = ['.confidential/secret-plans.pdf', '/.you-aint-seen-me/index.html', '/nothing/.to/see/here.jpg']
         paths.each do |path|
-          assert_raises_illegal_path_error path
+          get path
+          assert_not_found
         end
       end
 
-      def test_throws_exception_if_path_ends_with_hidden_file
+      def test_responds_not_found_if_path_ends_with_hidden_file
         hidden_files = ['.htaccess', '/.top-secret', '/assets/.shhh']
         hidden_files.each do |path|
-          assert_raises_illegal_path_error path
+          get path
+          assert_not_found
         end
       end
 
-      def test_throws_exception_if_path_contains_consecutive_periods
-        assert_raises_illegal_path_error '/hello/../sensitive/file'
+      def test_responds_not_found_if_path_contains_consecutive_periods
+        ["/hello/../sensitive/file", "/..", "/..."].each do |dotty_path|
+          get dotty_path
+          assert_not_found
+        end
       end
 
       def test_serves_html
@@ -325,13 +330,6 @@ module Rack
       def assert_not_found(msg=nil)
         assert_equal 404, last_response.status, msg
         assert_equal 'Not Found', last_response.body, msg
-      end
-
-      def assert_raises_illegal_path_error(path)
-        e = assert_raises SecurityError do
-          get path
-        end
-        assert_equal 'Illegal path requested', e.message
       end
 
     end
