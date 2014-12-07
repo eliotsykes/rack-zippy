@@ -1,4 +1,4 @@
-## 2.0.0.pre
+## 2.0.0 / 2014-12-07
 - Rack Zippy now works cleanly with all Rack apps, including Rails apps ([#23](https://github.com/eliotsykes/rack-zippy/issues/23))
 - Decomposed AssetServer into AssetServer, ServeableFile, and AssetCompiler classes
 - Installation notes for non-Rails Rack apps added to README.md
