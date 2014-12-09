@@ -75,6 +75,12 @@ Check your environment (in config/environments/) does not have `serve_static_ass
 
     config.serve_static_assets = false # Oops! Should be set to true for rack-zippy
 
+##### `NameError: uninitialized constant Rack::Zippy`
+
+- Check `Gemfile` doesn't limit rack-zippy to a subset of environment groups
+- Run `bundle install`
+- Check `Gemfile.lock` contains an entry for rack-zippy
+
 
 ## Contributing
 
