@@ -1,4 +1,5 @@
 ## 2.0.2.pre
+- Remove binstub bin/rake permanently, may be causing Heroku issues
 
 ## 2.0.1 / 2014-12-15
 - New `:max_age_fallback` (in seconds) option
