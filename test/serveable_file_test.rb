@@ -30,6 +30,24 @@ module Rack
         assert_last_modified cache_headers, nil
       end
 
+      def test_max_age_fallback_used_for_cache_headers
+        
+        ten_mins_in_secs = 10*60
+
+        serveable_file = ServeableFile.new(
+          :full_path_info => "/thanks.html",
+          :path => "#{asset_root}/thanks.html",
+          :has_encoding_variants => false,
+          :is_gzipped => false,
+          :max_age_fallback => ten_mins_in_secs
+        )
+
+        cache_headers = serveable_file.cache_headers
+
+        assert_cache_max_age cache_headers, ten_mins_in_secs
+        assert_last_modified cache_headers, nil
+      end
+
       def test_cache_max_age_is_month_for_root_favicon
         serveable_file = ServeableFile.new(
           :full_path_info => "/favicon.ico",
@@ -460,7 +478,8 @@ module Rack
       end
 
       def assert_cache_max_age(headers, expected_duration)
-        assert_equal "public, max-age=#{DURATIONS_IN_SECS[expected_duration]}", headers['Cache-Control']
+        duration_in_secs = DURATIONS_IN_SECS[expected_duration] || expected_duration
+        assert_equal "public, max-age=#{duration_in_secs}", headers['Cache-Control']
       end
 
     end

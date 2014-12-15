@@ -66,6 +66,24 @@ In `config.ru`:
 Follow the installation instructions above and rack-zippy will serve any static assets, including gzipped assets, from your
 application's public/ directory and will respond with sensible caching headers.
 
+### Options
+
+#### max_age_fallback
+
+`max_age_fallback`, is an integer value in seconds that should be used as the max_age fallback for files served by rack-zippy that live **outside** the `/assets` subdirectory *and* aren't `/favicon.ico`.
+
+A typical use for `max_age_fallback` is to define how long the cache lifetime for static HTML files served by rack-zippy should be. For one of my sites I have this set to 10 minutes:
+
+```ruby
+max_age_in_secs = 10*60 # 10 mins = 600 secs
+use Rack::Zippy::AssetServer, asset_root, max_age_fallback: max_age_in_secs
+```
+
+Any files given the `max_age_fallback` would have the following `Cache-Control` header:
+
+```
+Cache-Control: public, max-age=600
+```
 
 ## Troubleshooting
 

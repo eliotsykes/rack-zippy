@@ -14,6 +14,7 @@ module Rack
 
       def teardown
         revert_to_original_working_directory
+        @app = nil
       end
 
       def test_serves_static_file_as_directory
@@ -43,14 +44,12 @@ module Rack
       end
 
       def test_rails_asset_compiler_set_when_rails_environment_detected
-        asset_compiler = app.instance_variable_get('@asset_compiler')
-        assert_equal RailsAssetCompiler, asset_compiler.class
+        assert_equal RailsAssetCompiler, app.send(:asset_compiler).class
       end
 
       def test_null_asset_compiler_set_when_no_rails_environment_detected
         exit_rails_env
-        asset_compiler = app.instance_variable_get('@asset_compiler')
-        assert_equal NullAssetCompiler, asset_compiler.class
+        assert_equal NullAssetCompiler, app.send(:asset_compiler).class
       end
 
       def test_request_for_non_asset_path_beginning_with_assets_dir_name_bypasses_middleware
@@ -255,23 +254,36 @@ module Rack
 
       def test_asset_root_constructor_arg_accepts_string
         asset_server = AssetServer.new(create_rack_app, '/custom/asset/root')
-        assert_equal '/custom/asset/root', asset_server.instance_variable_get('@asset_root')
+        assert_equal '/custom/asset/root', asset_server.asset_root
       end
 
       def test_default_asset_root_is_rails_public_path
         Rails.public_path = '/unexpected/absolute/path/to/public'
         asset_server = AssetServer.new(create_rack_app)
-        assert_equal '/unexpected/absolute/path/to/public', asset_server.instance_variable_get('@asset_root')
+        assert_equal '/unexpected/absolute/path/to/public', asset_server.asset_root
+      end
+
+      def test_asset_server_accepts_max_age_fallback_option
+        fallback_in_secs = 1234
+        @app = AssetServer.new(
+          create_rack_app, asset_root, max_age_fallback: fallback_in_secs
+        )
+        
+        get '/thanks.html'
+        assert_equal "public, max-age=1234", last_response.headers['cache-control']
       end
 
       private
 
       def app
+        return @app if @app
         if in_rails_env?
-          return AssetServer.new(create_rack_app)
+          @app = AssetServer.new(create_rack_app)
+        else
+          # In a pure rack app, non-Rails env
+          @app = AssetServer.new(create_rack_app, asset_root)
         end
-        # In a pure rack app, non-Rails env
-        return AssetServer.new(create_rack_app, asset_root)
+        return @app
       end
 
       def create_rack_app

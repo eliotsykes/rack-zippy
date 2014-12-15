@@ -14,7 +14,7 @@ module Rack
 
       HTTP_STATUS_CODE_OK = 200
 
-      def initialize(app, asset_root=nil)
+      def initialize(app, asset_root=nil, options={})
         if asset_root.nil?
           if RailsAssetCompiler.rails_env?
             asset_root = ::Rails.public_path
@@ -24,8 +24,11 @@ module Rack
           end
         end
         @app = app
-        @asset_root = asset_root
-        @asset_compiler = resolve_asset_compiler
+
+        @options = {
+          :asset_compiler => resolve_asset_compiler,
+          :asset_root => asset_root
+        }.merge(options)
       end
 
       def call(env)
@@ -33,18 +36,25 @@ module Rack
 
         return not_found_response if path_info =~ ILLEGAL_PATH_REGEX
 
-        serveable_file = ServeableFile.find_first(
+        serveable_file_options = {
             :path_info => path_info,
-            :asset_root => @asset_root,
-            :asset_compiler => @asset_compiler,
-            :include_gzipped => client_accepts_gzip?(env)
-        )
+            :asset_root => asset_root,
+            :asset_compiler => asset_compiler,
+            :include_gzipped => client_accepts_gzip?(env),
+            :max_age_fallback => @options[:max_age_fallback]
+        }
+
+        serveable_file = ServeableFile.find_first(serveable_file_options)
 
         if serveable_file
           return [HTTP_STATUS_CODE_OK, serveable_file.headers, serveable_file.response_body]
         end
 
         @app.call(env)
+      end
+
+      def asset_root
+        @options[:asset_root]
       end
 
       private
@@ -60,6 +70,10 @@ module Rack
       def resolve_asset_compiler
         asset_compiler_class = RailsAssetCompiler.rails_env? ? RailsAssetCompiler : NullAssetCompiler
         return asset_compiler_class.new
+      end
+
+      def asset_compiler
+        @options[:asset_compiler]
       end
 
       def not_found_response

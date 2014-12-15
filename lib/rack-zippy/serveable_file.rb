@@ -11,6 +11,7 @@ module Rack
         @full_path_info = options[:full_path_info]
         @has_encoding_variants = options[:has_encoding_variants]
         @is_gzipped = options[:is_gzipped]
+        @max_age_fallback = options[:max_age_fallback] || SECONDS_IN[:day]
       end
 
       def headers
@@ -26,17 +27,17 @@ module Rack
 
       def cache_headers
         case full_path_info
-          when PRECOMPILED_ASSETS_SUBDIR_REGEX
-            lifetime = :year
-            last_modified = CACHE_FRIENDLY_LAST_MODIFIED
-          when '/favicon.ico'
-            lifetime = :month
-            last_modified = CACHE_FRIENDLY_LAST_MODIFIED
-          else
-            lifetime = :day
+        when PRECOMPILED_ASSETS_SUBDIR_REGEX
+          lifetime_in_secs = SECONDS_IN[:year]
+          last_modified = CACHE_FRIENDLY_LAST_MODIFIED
+        when '/favicon.ico'
+          lifetime_in_secs = SECONDS_IN[:month]
+          last_modified = CACHE_FRIENDLY_LAST_MODIFIED
+        else
+          lifetime_in_secs = @max_age_fallback
         end
 
-        headers = { 'Cache-Control' => "public, max-age=#{SECONDS_IN[lifetime]}" }
+        headers = { 'Cache-Control' => "public, max-age=#{lifetime_in_secs}" }
         headers['Last-Modified'] = last_modified if last_modified
 
         return headers
@@ -49,7 +50,7 @@ module Rack
       def self.find_first(options)
         asset_compiler = options[:asset_compiler]
         path_info = options[:path_info].chomp('/')
-        
+
         return nil if asset_compiler.compiles?(path_info)
 
         asset_root = options[:asset_root]
@@ -77,20 +78,19 @@ module Rack
 
         has_encoding_variants = gzipped_file_present
 
+        init_options = {
+          :path => file_path,
+          :full_path_info => full_path_info,
+          :has_encoding_variants => has_encoding_variants,
+          :max_age_fallback => options[:max_age_fallback]
+        }
+
         if include_gzipped && gzipped_file_present
-          return ServeableFile.new(
-              :path => gzipped_file_path,
-              :full_path_info => full_path_info,
-              :has_encoding_variants => has_encoding_variants,
-              :is_gzipped => true
-          )
+          init_options[:path] = gzipped_file_path
+          init_options[:is_gzipped] = true
         end
 
-        return ServeableFile.new(
-            :path => file_path,
-            :full_path_info => full_path_info,
-            :has_encoding_variants => has_encoding_variants
-        )
+        return ServeableFile.new(init_options)
       end
 
       def self.has_static_extension?(path)
@@ -116,15 +116,15 @@ module Rack
       end
       alias_method :eql?, :==
 
-      private
+        private
 
       # Old last-modified headers encourage caching via browser heuristics. Use it for year-long cached assets.
       CACHE_FRIENDLY_LAST_MODIFIED = 'Mon, 10 Jan 2005 10:00:00 GMT'
 
       SECONDS_IN = {
-          :day => 24*60*60,
-          :month => 31*(24*60*60),
-          :year => 365*(24*60*60)
+        :day => 24*60*60,
+        :month => 31*(24*60*60),
+        :year => 365*(24*60*60)
       }.freeze
 
       DEFAULT_STATIC_EXTENSION = '.html'.freeze
