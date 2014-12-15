@@ -21,3 +21,5 @@ tmp
 vendor
 .DS_Store
 *.tmp
+
+bin/rake
