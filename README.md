@@ -89,7 +89,7 @@ Cache-Control: public, max-age=600
 
 ### static_extensions
 
-rack-zippy handle only files with whitelisted extensions. Default extensions list: 
+rack-zippy handles only files with whitelisted extensions. Default extensions list: 
 `css js html htm txt ico png jpg jpeg gif pdf svg zip gz eps psd ai woff woff2 ttf eot otf swf`
 
 You can modify this list:
