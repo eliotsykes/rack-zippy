@@ -94,7 +94,7 @@ module Rack
       end
 
       def self.has_static_extension?(path)
-        path =~ AssetServer::STATIC_EXTENSION_REGEX
+        path =~ AssetServer.static_extension_regex
       end
 
       def encoding_variants?

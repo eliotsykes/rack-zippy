@@ -467,6 +467,12 @@ module Rack
                "Should handle flash .swf files"
       end
 
+      def test_has_static_extension_returns_true_for_configured_extension
+        Rack::Zippy.static_extensions << 'csv'
+        assert ServeableFile.has_static_extension?('/static-file.csv'),
+               "Should handle files with user configured extensions"
+      end
+
       private
 
       def assert_last_modified(headers, expected)
