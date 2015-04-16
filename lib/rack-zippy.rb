@@ -15,12 +15,6 @@ module Rack
 
       HTTP_STATUS_CODE_OK = 200
 
-      class << self
-        def static_extension_regex
-          /\.(?:#{Rack::Zippy.static_extensions.join('|')})\z/i
-        end
-      end
-
       def initialize(app, asset_root=nil, options={})
         if asset_root.nil?
           if RailsAssetCompiler.rails_env?
@@ -52,6 +46,7 @@ module Rack
         }
 
         serveable_file = ServeableFile.find_first(serveable_file_options)
+
 
         if serveable_file
           return [HTTP_STATUS_CODE_OK, serveable_file.headers, serveable_file.response_body]

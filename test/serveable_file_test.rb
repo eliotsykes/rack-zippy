@@ -14,6 +14,7 @@ module Rack
 
       def teardown
         revert_to_original_working_directory
+        Rack::Zippy.reset_static_extensions
       end
 
       def test_day_long_cache_headers_for_root_html_requests

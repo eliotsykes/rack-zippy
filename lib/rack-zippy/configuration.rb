@@ -13,6 +13,9 @@ module Rack
         define_class_method name do
           class_variable_get("@@#{name}")
         end
+        define_class_method "reset_#{name}" do
+          class_variable_set("@@#{name}", default)
+        end
       end
 
       private
