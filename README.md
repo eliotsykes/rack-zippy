@@ -85,6 +85,21 @@ Any files given the `max_age_fallback` would have the following `Cache-Control` 
 Cache-Control: public, max-age=600
 ```
 
+### Configuration
+
+### static_extensions
+
+rack-zippy handle only files with whitelisted extensions. Default extensions list: 
+`css js html htm txt ico png jpg jpeg gif pdf svg zip gz eps psd ai woff woff2 ttf eot otf swf`
+
+You can modify this list:
+
+```ruby
+Rack::Zippy.configure do |config|
+  config.static_extensions << 'csv'
+end
+```
+
 ## Troubleshooting
 
 ##### 'assert_index': No such middleware to insert before: ActionDispatch::Static (RuntimeError)
