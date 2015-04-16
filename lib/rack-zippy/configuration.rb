@@ -6,7 +6,13 @@ module Rack
       end
 
       def define_setting(name, default = nil)
-        class_variable_set("@@#{name}", default)
+        default_copy = begin
+                         default.dup
+        rescue TypeError
+                         default
+        end
+        class_variable_set("@@#{name}", default_copy)
+
         define_class_method "#{name}=" do |value|
           class_variable_set("@@#{name}", value)
         end
