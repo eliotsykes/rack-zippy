@@ -1,16 +1,17 @@
 require 'rack-zippy/version'
 require 'rack-zippy/asset_compiler'
 require 'rack-zippy/serveable_file'
+require 'rack-zippy/configuration'
 
 module Rack
   module Zippy
+    extend Configuration
+
+    define_setting :static_extensions, %w(css js html htm txt ico png jpg jpeg gif pdf svg zip gz eps psd ai woff woff2 ttf eot otf swf)
 
     PRECOMPILED_ASSETS_SUBDIR_REGEX = /\A\/assets(?:\/|\z)/
 
     class AssetServer
-
-      # Font extensions: woff, woff2, ttf, eot, otf
-      STATIC_EXTENSION_REGEX = /\.(?:css|js|html|htm|txt|ico|png|jpg|jpeg|gif|pdf|svg|zip|gz|eps|psd|ai|woff|woff2|ttf|eot|otf|swf)\z/i
 
       HTTP_STATUS_CODE_OK = 200
 
@@ -45,6 +46,7 @@ module Rack
         }
 
         serveable_file = ServeableFile.find_first(serveable_file_options)
+
 
         if serveable_file
           return [HTTP_STATUS_CODE_OK, serveable_file.headers, serveable_file.response_body]

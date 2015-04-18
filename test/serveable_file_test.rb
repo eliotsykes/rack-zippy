@@ -14,6 +14,7 @@ module Rack
 
       def teardown
         revert_to_original_working_directory
+        Rack::Zippy.reset_static_extensions
       end
 
       def test_day_long_cache_headers_for_root_html_requests
@@ -465,6 +466,12 @@ module Rack
       def test_has_static_extension_returns_true_for_flash
         assert ServeableFile.has_static_extension?('/splash-page-like-its-1999.swf'),
                "Should handle flash .swf files"
+      end
+
+      def test_has_static_extension_returns_true_for_configured_extension
+        Rack::Zippy.static_extensions << 'csv'
+        assert ServeableFile.has_static_extension?('/static-file.csv'),
+               "Should handle files with user configured extensions"
       end
 
       private

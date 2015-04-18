@@ -39,10 +39,6 @@ module Rack
         assert_responds_with_html_file '', 'public/index.html'
       end
 
-      def test_static_extension_regexp_available_in_established_constant_for_monkey_patching
-        assert AssetServer.const_defined?(:STATIC_EXTENSION_REGEX)
-      end
-
       def test_rails_asset_compiler_set_when_rails_environment_detected
         assert_equal RailsAssetCompiler, app.send(:asset_compiler).class
       end

@@ -94,7 +94,7 @@ module Rack
       end
 
       def self.has_static_extension?(path)
-        path =~ AssetServer::STATIC_EXTENSION_REGEX
+        Rack::Zippy.static_extensions.include? ::File.extname(path).slice(1..-1).to_s.downcase
       end
 
       def encoding_variants?
