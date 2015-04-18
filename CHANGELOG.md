@@ -1,3 +1,5 @@
+## 3.0.1.pre
+
 ## 3.0.0 / 2015-04-18
 - Make static extensions list configurable ([#45](https://github.com/eliotsykes/rack-zippy/pull/45/files)) Anton Petrunich
 
