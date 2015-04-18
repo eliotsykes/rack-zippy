@@ -87,7 +87,7 @@ Cache-Control: public, max-age=600
 
 ### Configuration
 
-### static_extensions
+#### static_extensions
 
 rack-zippy handles only files with whitelisted extensions. Default extensions list: 
 `css js html htm txt ico png jpg jpeg gif pdf svg zip gz eps psd ai woff woff2 ttf eot otf swf`
@@ -154,7 +154,7 @@ Cleanup time! When you’re finished testing, delete the local override and set 
 - Eliot Sykes https://eliotsykes.com
 - Kieran Topping https://github.com/ktopping
 - Luke Wendling https://github.com/lukewendling
-
+- Anton Petrunich https://github.com/solenko
 
 ## Releasing a new gem
 
