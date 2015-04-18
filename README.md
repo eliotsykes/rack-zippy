@@ -161,6 +161,7 @@ Cleanup time! When you’re finished testing, delete the local override and set 
 1. Update pre-release version to the release version in `lib/rack-zippy/version.rb`, e.g. `1.0.1.pre` becomes `1.0.1`
 2. Update `CHANGELOG.md` version and date. Update Contributors in `README.md`.
 3. Tests pass? (`rake test`)
+4. Commit and push changes to origin.
 4. Build the gem (`rake build`)
 5. Release on rubygems.org (`rake release`)
 6. Update version to the next pre-release version in `lib/rack-zippy/version.rb`, e.g. `1.0.1` becomes `1.0.2.pre`.
