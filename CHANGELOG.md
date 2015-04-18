@@ -1,6 +1,7 @@
 ## 3.0.1.pre
 
 ## 3.0.0 / 2015-04-18
+- POTENTIAL BREAKING CHANGE! `STATIC_EXTENSION_REGEX` has been removed and replaced with a `static_extensions` array. If your app monkey patched `STATIC_EXTENSTION_REGEX` to change the file extension whitelist, then you will need to update your app to use rack-zippy 3.x. Depending on how you patched, and your test coverage, your app could silently fail. Search your codebase for `STATIC_EXTENSION_REGEX` to ensure it is not used. If it is used, then migrate your patch to use the new `Rack::Zippy.config` method for configuring `static_extensions`: https://github.com/eliotsykes/rack-zippy#static_extensions 
 - Make static extensions list configurable ([#45](https://github.com/eliotsykes/rack-zippy/pull/45/files)) Anton Petrunich
 
 ## 2.0.2 / 2014-12-15
