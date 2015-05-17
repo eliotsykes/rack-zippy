@@ -87,16 +87,17 @@ Cache-Control: public, max-age=600
 
 ### Configuration
 
-#### static_extensions
+#### Supported Extensions Whitelist
 
-rack-zippy handles only files with whitelisted extensions. Default extensions list: 
+rack-zippy handles only files with whitelisted extensions. Default extensions are stored in the `static_extensions` array with an entry for each of these: 
 `css js html htm txt ico png jpg jpeg gif pdf svg zip gz eps psd ai woff woff2 ttf eot otf swf`
 
-You can modify this list:
+You can modify this list to support other extensions by appending the lowercased file extension to the `static_extensions` array:
 
 ```ruby
 Rack::Zippy.configure do |config|
-  config.static_extensions << 'csv'
+  # Add support for the given extensions:
+  config.static_extensions.push('csv', 'xls', 'rtf', ...EXTENSIONS TO ADD...)
 end
 ```
 
