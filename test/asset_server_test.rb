@@ -198,6 +198,13 @@ module Rack
         end
       end
 
+      def test_responds_ok_if_path_contains_periods_that_not_follow_slash
+         ["/hello/path..with....periouds/file", "/hello/path/with..periods"].each do |dotty_path|
+          get dotty_path
+          assert_response_ok
+        end
+      end
+
       def test_serves_html
         assert_responds_with_html_file '/thanks.html', 'public/thanks.html'
       end
