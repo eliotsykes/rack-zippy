@@ -156,6 +156,7 @@ Cleanup time! When you’re finished testing, delete the local override and set 
 - Kieran Topping https://github.com/ktopping
 - Luke Wendling https://github.com/lukewendling
 - Anton Petrunich https://github.com/solenko
+- ssemakov https://github.com/ssemakov
 
 ## Releasing a new gem
 
