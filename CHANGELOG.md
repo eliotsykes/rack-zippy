@@ -1,3 +1,5 @@
+## 3.0.2.pre / 2015-05-19
+
 ## 3.0.1 / 2015-05-19
 - Allow paths with periods in the middle, but not if they immediately follow slash ([#46](https://github.com/eliotsykes/rack-zippy/pull/46)) @ssemakov
 
