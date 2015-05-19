@@ -63,7 +63,7 @@ module Rack
 
       ACCEPTS_GZIP_REGEX = /\bgzip\b/
 
-      ILLEGAL_PATH_REGEX = /(\/\.\.|\/\.)/
+      ILLEGAL_PATH_REGEX = /(\/\.\.?)/
 
       def client_accepts_gzip?(rack_env)
         rack_env['HTTP_ACCEPT_ENCODING'] =~ ACCEPTS_GZIP_REGEX

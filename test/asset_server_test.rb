@@ -192,16 +192,16 @@ module Rack
       end
 
       def test_responds_not_found_if_path_contains_consecutive_periods
-        ["/hello/../sensitive/file", "/..", "/..."].each do |dotty_path|
+        ["/hello/../sensitive/file", "/..", "/...", "../sensitive"].each do |dotty_path|
           get dotty_path
           assert_not_found
         end
       end
 
       def test_responds_ok_if_path_contains_periods_that_not_follow_slash
-         ["/hello/path..with....periouds/file", "/hello/path/with..periods"].each do |dotty_path|
+         ["/hello/path..with....periods/file", "/hello/path/with.a.period"].each do |dotty_path|
           get dotty_path
-          assert_response_ok
+          assert_underlying_app_responded
         end
       end
 
