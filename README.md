@@ -1,9 +1,15 @@
 # rack-zippy
 
-rack-zippy is a Rack middleware for serving static gzipped assets precompiled by the Rails asset pipeline into the public/assets directory. Use it
-on Heroku if you want to serve the precompiled gzipped assets to gzip-capable clients with sensible caching headers.
+rack-zippy is a Rack middleware for serving static gzipped assets precompiled by the Rails (4.1 and earlier) asset pipeline into the public/assets directory. Use it on Heroku if you want to serve the precompiled gzipped assets to gzip-capable clients with sensible caching headers.
 
-By default, Rails + Heroku will not serve *.gz assets even though they are generated at deploy time.
+## IMPORTANT NOTES for Rails 4.2 applications
+- Rails 4.2 does *not* generate .gz assets when using a recent version of Sprockets
+- .gz asset generation was removed in Sprockets 3.0 (see discussion here https://github.com/rails/sprockets/issues/26).
+- Ensure that .gz files are generated during `rake assets:precompile`
+- It might help using an earlier version of Sprockets, e.g. `gem "sprockets", "~> 2.12.4"` (awaiting confirmation - please tell me if you've found this works)
+- Rails 4.2 now contains middleware to serve .gz files **if** they are generated, so as long as the .gz files are generated, you probably will not need rack-zippy. Check the headers and responses on your assets served in your production environment.
+
+By default, Heroku + Rails 4.1 and earlier will not serve *.gz assets. These *.gz assets **used** to be generated at deploy time in Rails 4.1 and earlier. However in Rails 4.2 they are **not** generated (see notes on Rails 4.2 above).
 
 rack-zippy replaces the `ActionDispatch::Static` middleware used by Rails, which is not capable of serving the gzipped assets created by
 the `rake assets:precompile` task. rack-zippy will serve non-gzipped assets where they are not available or not supported by the
@@ -40,8 +46,6 @@ Create the file `config/initializers/rack_zippy.rb` and put this line in it:
     Rails.application.config.middleware.swap(ActionDispatch::Static, Rack::Zippy::AssetServer)
 
 Now run `rake middleware` at the command line and make sure that `Rack::Zippy::AssetServer` is near the top of the outputted list. ActionDispatch::Static should not be in the list. Nicely done, rack-zippy is now installed in your app.
-
-**Note for Rails 4.2**: Rails 4.2 is already serving *.gz files by default so that rack-zippy isn't needed here anymore. You just have to make sure that *.gz files are generated during `rake assets:precompile`, but this functionality has been removed with Sprockets 3 (see discussion here https://github.com/rails/sprockets/issues/26). For now, it might help using an earlier version of Sprockets, e.g. `gem "sprockets", "~> 2.12.4"`.
 
 ## Installation in Rack app (that isn’t a Rails app)
 
