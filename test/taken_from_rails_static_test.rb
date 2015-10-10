@@ -1,19 +1,28 @@
-require 'abstract_unit'
+require_relative 'test_helper'
 require 'zlib'
+
+FIXTURE_LOAD_PATH = File.join(File.dirname(__FILE__), 'fixtures')
+
+# These tests taken from rails/actionpack with as few changes as
+# possible. Try to keep these tests up-to-date with the latest in
+# rails/actionpack
+#
+#     Original: https://github.com/rails/rails/blob/0450642c27af3af35b449208b21695fd55c30f90/actionpack/test/dispatch/static_test.rb
+# Last Updated: NEVER
 
 module StaticTests
   def setup
-    silence_warnings do
+    # silence_warnings do
       @default_internal_encoding = Encoding.default_internal
       @default_external_encoding = Encoding.default_external
-    end
+    # end
   end
 
   def teardown
-    silence_warnings do
+    # silence_warnings do
       Encoding.default_internal = @default_internal_encoding
       Encoding.default_external = @default_external_encoding
-    end
+    # end
   end
 
   def test_serves_dynamic_content
@@ -29,10 +38,10 @@ module StaticTests
   end
 
   def test_handles_urls_with_ascii_8bit_on_win_31j
-    silence_warnings do
+    #silence_warnings do
       Encoding.default_internal = "Windows-31J"
       Encoding.default_external = "Windows-31J"
-    end
+    #end
     assert_equal "Hello, World!", get("/doorkeeper%E3E4".force_encoding('ASCII-8BIT')).body
   end
 
@@ -67,8 +76,8 @@ module StaticTests
   end
 
   def test_served_static_file_with_non_english_filename
-    jruby_skip "Stop skipping if following bug gets fixed: " \
-      "http://jira.codehaus.org/browse/JRUBY-7192"
+    #jruby_skip "Stop skipping if following bug gets fixed: " \
+    #  "http://jira.codehaus.org/browse/JRUBY-7192"
     assert_html "means hello in Japanese\n", get("/foo/#{Rack::Utils.escape("こんにちは.html")}")
   end
 
@@ -229,7 +238,7 @@ module StaticTests
     end
 end
 
-class StaticTest < ActiveSupport::TestCase
+class StaticTest < TestCase
   DummyApp = lambda { |env|
     [200, {"Content-Type" => "text/plain"}, ["Hello, World!"]]
   }
@@ -237,7 +246,7 @@ class StaticTest < ActiveSupport::TestCase
   def setup
     super
     @root = "#{FIXTURE_LOAD_PATH}/public"
-    @app = static_server_class.new(DummyApp, @root, "public, max-age=60")
+    @app = static_server_class.new(DummyApp, @root)#, "public, max-age=60")
   end
 
   def static_server_class
@@ -270,7 +279,7 @@ class StaticTest < ActiveSupport::TestCase
   end
 
   def test_non_default_static_index
-    @app = static_server_class.new(DummyApp, @root, "public, max-age=60", index: "other-index")
+    @app = static_server_class.new(DummyApp, @root)#, "public, max-age=60", index: "other-index")
     assert_html "/other-index.html", get("/other-index.html")
     assert_html "/other-index.html", get("/other-index")
     assert_html "/other-index.html", get("/")
@@ -287,7 +296,7 @@ class StaticEncodingTest < StaticTest
   def setup
     super
     @root = "#{FIXTURE_LOAD_PATH}/公共"
-    @app = static_server_class.new(DummyApp, @root, "public, max-age=60")
+    @app = static_server_class.new(DummyApp, @root)#, "public, max-age=60")
   end
 
   def public_path
