@@ -9,7 +9,7 @@ rack-zippy is a Rack middleware for serving static gzipped assets precompiled by
 - It might help using an earlier version of Sprockets, e.g. `gem "sprockets", "~> 2.12.4"` (awaiting confirmation - please tell me if you've found this works)
 - Rails 4.2 now contains middleware to serve .gz files **if** they are generated, so as long as the .gz files are generated, you probably will not need rack-zippy. Check the headers and responses on your assets served in your production environment.
 
-By default, Heroku + Rails 4.1 and earlier will not serve *.gz assets. These *.gz assets **used** to be generated at deploy time in Rails 4.1 and earlier. However in Rails 4.2 they are **not** generated (see notes on Rails 4.2 above).
+By default, Heroku + Rails 4.1 and earlier will not serve .gz assets. These .gz assets **used** to be generated at deploy time in Rails 4.1 and earlier. However in Rails 4.2 they are **not** generated (see notes on Rails 4.2 above).
 
 rack-zippy replaces the `ActionDispatch::Static` middleware used by Rails, which is not capable of serving the gzipped assets created by
 the `rake assets:precompile` task. rack-zippy will serve non-gzipped assets where they are not available or not supported by the
@@ -34,7 +34,7 @@ Add this line to your application's Gemfile:
 And then execute:
 
     $ bundle
-    
+
 In `config/environments/production.rb`, set `config.serve_static_assets` to `true`:
 
     # Puts ActionDispatch::Static in middleware stack which we are going to replace with
@@ -95,7 +95,7 @@ Cache-Control: public, max-age=600
 
 #### Supported Extensions Whitelist
 
-rack-zippy handles only files with whitelisted extensions. Default extensions are stored in the `static_extensions` array with an entry for each of these: 
+rack-zippy handles only files with whitelisted extensions. Default extensions are stored in the `static_extensions` array with an entry for each of these:
 `css js html htm txt ico png jpg jpeg gif pdf svg zip gz eps psd ai woff woff2 ttf eot otf swf`
 
 You can modify this list to support other extensions by appending the lowercased file extension to the `static_extensions` array:
@@ -176,4 +176,3 @@ Cleanup time! When you’re finished testing, delete the local override and set 
 6. Update version to the next pre-release version in `lib/rack-zippy/version.rb`, e.g. `1.0.1` becomes `1.0.2.pre`.
 7. Add new heading to `CHANGELOG` for the next pre-release
 8. Commit and push the updated `lib/rack-zippy/version.rb` and `CHANGELOG` files.
-
