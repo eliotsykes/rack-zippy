@@ -17,4 +17,6 @@ Gem::Specification.new do |gem|
   gem.executables   = []
   gem.test_files    = gem.files.grep(%r{^(test|spec|features)/})
   gem.require_paths = ["lib"]
+
+  gem.add_dependency 'actionpack', '~> 4.2.4'
 end

@@ -154,7 +154,15 @@ Cleanup time! When you’re finished testing, delete the local override and set 
     # In your-app/Gemfile change rack-zippy dependency to this (or similar):
     gem 'rack-zippy', '~> 9.8.7' # Replace 9.8.7 with the rack-zippy release version you want to use.
 
+#### How to Run a Single Test
 
+```bash
+# Single test method
+ruby -Ilib:test test/taken_from_rails_static_test.rb --name test_serves_static_file_with_ampersand_in_filename
+
+# Single test file
+ruby -Ilib:test test/taken_from_rails_static_test.rb
+```
 
 ## Contributors
 
