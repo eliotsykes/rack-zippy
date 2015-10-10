@@ -15,12 +15,14 @@ module Rack
 
       HTTP_STATUS_CODE_OK = 200
 
+      # def initialize(app, path, cache_control = nil, index: 'index')
       def initialize(app, asset_root=nil, options={})
+        raise ArgumentError, 'options argument cannot be a String' if options.is_a? String
         if asset_root.nil?
           if RailsAssetCompiler.rails_env?
             asset_root = ::Rails.public_path
           else
-            raise ArgumentError.new 'Please specify asset_root when initializing Rack::Zippy::AssetServer ' +
+            raise ArgumentError, 'Please specify asset_root when initializing Rack::Zippy::AssetServer ' +
               '(asset_root is the path to your public directory, often the one with favicon.ico in it)'
           end
         end
