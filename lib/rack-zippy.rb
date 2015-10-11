@@ -4,16 +4,11 @@ require 'action_controller'
 module Rack
   module Zippy
     class AssetServer
-
-      ILLEGAL_PATH_REGEX = /(\/\.\.?)/
-
-      BLANK_PATH_MESSAGE = 'Please specify non-blank path when initializing rack-zippy middleware ' +
-        '(path leads to your public directory, often the one with favicon.ico in it)'
-
+      
       attr_reader :static_middleware
 
       def initialize(app, path=nil, options={})
-        raise ArgumentError, BLANK_PATH_MESSAGE if path.blank?
+        assert_path_valid path
         @static_middleware = ::ActionDispatch::Static.new(app, path)
       end
 
@@ -24,6 +19,15 @@ module Rack
       end
 
       private
+
+      ILLEGAL_PATH_REGEX = /(\/\.\.?)/
+
+      BLANK_PATH_MESSAGE = 'Please specify non-blank path when initializing rack-zippy middleware ' +
+        '(path leads to your public directory, often the one with favicon.ico in it)'
+
+      def assert_path_valid(path)
+        raise ArgumentError, BLANK_PATH_MESSAGE if path.blank?
+      end
 
       def illegal_path?(env)
         path_info = env['PATH_INFO']
