@@ -7,7 +7,7 @@ module Rack
 
       attr_reader :static_middleware
 
-      # @param app [#call] the Rack app
+      # @param app [#call(env)] the Rack app
       # @param path [String] the path to the public directory, usually where favicon.ico lives
       # @param max_age_fallback [Fixnum] time for Cache-Control header. Defaults to 1 day (in seconds).
       def initialize(app, path, max_age_fallback: :day)
