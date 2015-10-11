@@ -1,4 +1,5 @@
 require_relative 'test_helper'
+require 'rack-zippy/configuration'
 
 module Rack
   module Zippy
