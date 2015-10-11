@@ -9,7 +9,7 @@ module Rack
 
       # @param app [#call] the Rack app
       # @param path [String] the path to the public directory, usually where favicon.ico lives
-      # @param max_age_fallback [Fixnum] optional time in seconds that Cache-Control header should use instead of the default
+      # @param max_age_fallback [Fixnum] time for Cache-Control header. Defaults to 1 day (in seconds).
       def initialize(app, path, max_age_fallback: :day)
         assert_path_valid path
 
