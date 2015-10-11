@@ -9,7 +9,7 @@ module Rack
         ensure_correct_working_directory
         enter_rails_env
         ::Rails.public_path = Pathname.new(asset_root)
-        ::Rails.configuration.assets.compile = false
+        # ::Rails.configuration.assets.compile = false
       end
 
       def teardown
@@ -89,12 +89,6 @@ module Rack
         get '/favicon.ico'
         assert_response_ok
         assert_cache_friendly_last_modified
-      end
-
-      def test_does_not_serve_assets_subdir_request_when_assets_compile_enabled
-        ::Rails.configuration.assets.compile = true
-        get '/assets/application.css'
-        assert_underlying_app_responded
       end
 
       def test_responds_with_gzipped_css_to_gzip_capable_clients
@@ -256,12 +250,6 @@ module Rack
         assert_underlying_app_responded
       end
 
-      def test_default_asset_root_is_rails_public_path
-        Rails.public_path = '/unexpected/absolute/path/to/public'
-        asset_server = AssetServer.new(create_rack_app)
-        assert_equal '/unexpected/absolute/path/to/public', asset_server.asset_root
-      end
-
       def test_asset_server_accepts_max_age_fallback_option
         fallback_in_secs = 1234
         @app = AssetServer.new(
@@ -276,15 +264,6 @@ module Rack
 
       def app
         @app ||= AssetServer.new(create_rack_app, asset_root)
-        #
-        # return @app if @app
-        # if in_rails_env?
-        #   @app = AssetServer.new(create_rack_app)
-        # else
-        #   # In a pure rack app, non-Rails env
-        #   @app = AssetServer.new(create_rack_app, asset_root)
-        # end
-        # return @app
       end
 
       def create_rack_app
