@@ -32,9 +32,9 @@ module Rack
         '(path leads to your public directory, often the one with favicon.ico in it)'
 
       SECONDS_IN = {
-        :day => 24*60*60,
-        :month => 31*(24*60*60),
-        :year => 365*(24*60*60)
+        day: 24*60*60,
+        month: 31*(24*60*60),
+        year: 365*(24*60*60)
       }.freeze
 
       def assert_path_valid(path)
