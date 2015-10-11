@@ -12,9 +12,8 @@ module Rack
       # @param max_age_fallback [Fixnum] optional time in seconds that Cache-Control header should use instead of the default
       def initialize(app, path, max_age_fallback: :day)
         assert_path_valid path
-        max_age_fallback = calc_max_age_fallback(max_age_fallback)
 
-        cache_control = "public, max-age=#{max_age_fallback}"
+        cache_control = cache_control(max_age_fallback)
 
         @static_middleware = ::ActionDispatch::Static.new(app, path, cache_control)
       end
@@ -38,12 +37,17 @@ module Rack
         :year => 365*(24*60*60)
       }.freeze
 
-      def calc_max_age_fallback(max_age_fallback)
-        max_age_fallback.is_a?(Symbol) ? SECONDS_IN.fetch(max_age_fallback) : max_age_fallback
-      end
-
       def assert_path_valid(path)
         raise ArgumentError, BLANK_PATH_MESSAGE if path.blank?
+      end
+
+      def cache_control(max_age_fallback)
+        max_age_fallback = calc_max_age_fallback(max_age_fallback)
+        "public, max-age=#{max_age_fallback}"
+      end
+
+      def calc_max_age_fallback(max_age_fallback)
+        max_age_fallback.is_a?(Symbol) ? SECONDS_IN.fetch(max_age_fallback) : max_age_fallback
       end
 
       def illegal_path?(env)
