@@ -17,6 +17,16 @@ module Rack
         @app = nil
       end
 
+      BLANK_PATHS = [nil, '', '   ']
+
+      BLANK_PATHS.each do |blank_path|
+        test "initializer prevents blank path: #{blank_path.inspect}" do
+          assert_raise ArgumentError do
+            AssetServer.new(create_rack_app, blank_path)
+          end
+        end
+      end
+
       def test_serves_static_file_as_directory
         expected_html_file = 'public/foo/bar.html'
         assert_responds_with_html_file '/foo/bar.html', expected_html_file
@@ -37,15 +47,6 @@ module Rack
         assert_responds_with_html_file '/index', 'public/index.html'
         assert_responds_with_html_file '/', 'public/index.html'
         assert_responds_with_html_file '', 'public/index.html'
-      end
-
-      def test_rails_asset_compiler_set_when_rails_environment_detected
-        assert_equal RailsAssetCompiler, app.send(:asset_compiler).class
-      end
-
-      def test_null_asset_compiler_set_when_no_rails_environment_detected
-        exit_rails_env
-        assert_equal NullAssetCompiler, app.send(:asset_compiler).class
       end
 
       def test_request_for_non_asset_path_beginning_with_assets_dir_name_bypasses_middleware
@@ -255,11 +256,6 @@ module Rack
         assert_underlying_app_responded
       end
 
-      def test_asset_root_constructor_arg_accepts_string
-        asset_server = AssetServer.new(create_rack_app, '/custom/asset/root')
-        assert_equal '/custom/asset/root', asset_server.asset_root
-      end
-
       def test_default_asset_root_is_rails_public_path
         Rails.public_path = '/unexpected/absolute/path/to/public'
         asset_server = AssetServer.new(create_rack_app)
@@ -271,7 +267,7 @@ module Rack
         @app = AssetServer.new(
           create_rack_app, asset_root, max_age_fallback: fallback_in_secs
         )
-        
+
         get '/thanks.html'
         assert_equal "public, max-age=1234", last_response.headers['cache-control']
       end
@@ -279,14 +275,16 @@ module Rack
       private
 
       def app
-        return @app if @app
-        if in_rails_env?
-          @app = AssetServer.new(create_rack_app)
-        else
-          # In a pure rack app, non-Rails env
-          @app = AssetServer.new(create_rack_app, asset_root)
-        end
-        return @app
+        @app ||= AssetServer.new(create_rack_app, asset_root)
+        #
+        # return @app if @app
+        # if in_rails_env?
+        #   @app = AssetServer.new(create_rack_app)
+        # else
+        #   # In a pure rack app, non-Rails env
+        #   @app = AssetServer.new(create_rack_app, asset_root)
+        # end
+        # return @app
       end
 
       def create_rack_app
