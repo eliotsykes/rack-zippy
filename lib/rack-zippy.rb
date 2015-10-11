@@ -4,12 +4,22 @@ require 'action_controller'
 module Rack
   module Zippy
     class AssetServer
-      
+
       attr_reader :static_middleware
 
-      def initialize(app, path=nil, options={})
+      # @param app [#call] the Rack app
+      # @param path [String] the path to the public directory, usually where favicon.ico lives
+      # @param max_age_fallback [Fixnum] optional time in seconds that Cache-Control header should use instead of the default
+      def initialize(app, path, max_age_fallback: nil)
         assert_path_valid path
-        @static_middleware = ::ActionDispatch::Static.new(app, path)
+
+        if max_age_fallback
+          cache_control = "public, max-age=#{max_age_fallback}"
+        else
+          cache_control = nil
+        end
+
+        @static_middleware = ::ActionDispatch::Static.new(app, path, cache_control)
       end
 
       def call(env)

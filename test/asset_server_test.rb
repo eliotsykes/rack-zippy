@@ -250,7 +250,7 @@ module Rack
         assert_underlying_app_responded
       end
 
-      def test_asset_server_accepts_max_age_fallback_option
+      def test_uses_max_age_fallback_in_cache_control
         fallback_in_secs = 1234
         @app = AssetServer.new(
           create_rack_app, asset_root, max_age_fallback: fallback_in_secs
