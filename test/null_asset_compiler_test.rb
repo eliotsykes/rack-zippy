@@ -1,4 +1,5 @@
 require_relative 'test_helper'
+require 'rack-zippy/asset_compiler'
 
 module Rack
   module Zippy
