@@ -15,13 +15,22 @@ module Rack
 
         cache_control = cache_control(max_age_fallback)
 
-        @static_middleware = ::ActionDispatch::Static.new(app, path, cache_control)
+        @app = app
+        blank_app = ->(env) { }
+        @static_middleware = ::ActionDispatch::Static.new(blank_app, path, cache_control)
       end
 
       def call(env)
         return not_found_response if illegal_path?(env)
 
-        static_middleware.call(env)
+        static_response = static_middleware.call(env)
+
+        if static_response
+          # static middleware handled request
+          static_response
+        else
+          @app.call(env)
+        end
       end
 
       private
