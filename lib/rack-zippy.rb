@@ -26,8 +26,7 @@ module Rack
         static_response = static_middleware.call(env)
 
         if static_response
-          # static middleware handled request
-          static_response
+          after_static_responds(env, static_response)
         else
           @app.call(env)
         end
@@ -45,6 +44,9 @@ module Rack
         month: 31*(24*60*60),
         year: 365*(24*60*60)
       }.freeze
+
+      # Old last-modified headers encourage caching via browser heuristics. Use it for year-long cached assets.
+      CACHE_FRIENDLY_LAST_MODIFIED = 'Mon, 10 Jan 2005 10:00:00 GMT'
 
       def assert_path_valid(path)
         raise ArgumentError, BLANK_PATH_MESSAGE if path.blank?
@@ -67,6 +69,38 @@ module Rack
       def not_found_response
         [404, {}, ['Not Found']]
       end
+
+      def after_static_responds(env, static_response)
+        path_info = env['PATH_INFO']
+        case path_info
+        when "%2Ffavicon.ico"
+          lifetime_in_secs = SECONDS_IN[:month]
+          last_modified = CACHE_FRIENDLY_LAST_MODIFIED
+          headers = static_response[1]
+          headers['Cache-Control'] = "public, max-age=#{lifetime_in_secs}"
+          headers['Last-Modified'] = last_modified
+        end
+        static_response
+      end
+
+
+      # def cache_headers(path_info)
+        # case full_path_info
+        # when PRECOMPILED_ASSETS_SUBDIR_REGEX
+        #   lifetime_in_secs = SECONDS_IN[:year]
+        #   last_modified = CACHE_FRIENDLY_LAST_MODIFIED
+        # when '/favicon.ico'
+        #   lifetime_in_secs = SECONDS_IN[:month]
+        #   last_modified = CACHE_FRIENDLY_LAST_MODIFIED
+        # else
+        #   lifetime_in_secs = @max_age_fallback
+        # end
+        #
+        # headers = { 'Cache-Control' => "public, max-age=#{lifetime_in_secs}" }
+        # headers['Last-Modified'] = last_modified if last_modified
+        #
+        # return headers
+      # end
 
     end
   end
