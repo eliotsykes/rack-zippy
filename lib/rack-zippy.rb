@@ -81,6 +81,11 @@ module Rack
       def after_static_responds(env, static_response)
         path = ::Rack::Utils.unescape(env[PATH_INFO])
         headers = static_response[1]
+        modify_headers(path, headers)
+        static_response
+      end
+
+      def modify_headers(path, headers)
         case path
         when ASSETS_SUBDIR_REGEX
           lifetime_in_secs = SECONDS_IN[:year]
@@ -97,8 +102,6 @@ module Rack
         else
           headers.delete(LAST_MODIFIED)
         end
-
-        static_response
       end
 
     end
