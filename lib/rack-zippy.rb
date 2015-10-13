@@ -3,6 +3,9 @@ require 'action_controller'
 
 module Rack
   module Zippy
+
+    ASSETS_SUBDIR_REGEX = /\A\/assets(?:\/|\z)/
+
     class AssetServer
 
       attr_reader :static_middleware
@@ -46,7 +49,9 @@ module Rack
       }.freeze
 
       # Old last-modified headers encourage caching via browser heuristics. Use it for year-long cached assets.
-      CACHE_FRIENDLY_LAST_MODIFIED = 'Mon, 10 Jan 2005 10:00:00 GMT'
+      CACHE_FRIENDLY_LAST_MODIFIED = 'Mon, 10 Jan 2005 10:00:00 GMT'.freeze
+
+      FAVICON_PATH = '/favicon.ico'.freeze
 
       def assert_path_valid(path)
         raise ArgumentError, BLANK_PATH_MESSAGE if path.blank?
@@ -71,14 +76,23 @@ module Rack
       end
 
       def after_static_responds(env, static_response)
-        path_info = env['PATH_INFO']
-        case path_info
-        when "%2Ffavicon.ico"
+        path = ::Rack::Utils.unescape(env['PATH_INFO'])
+        case path
+        when ASSETS_SUBDIR_REGEX
+          lifetime_in_secs = SECONDS_IN[:year]
+          last_modified = CACHE_FRIENDLY_LAST_MODIFIED
+          headers = static_response[1]
+          headers['Cache-Control'] = "public, max-age=#{lifetime_in_secs}"
+          headers['Last-Modified'] = last_modified
+        when FAVICON_PATH
           lifetime_in_secs = SECONDS_IN[:month]
           last_modified = CACHE_FRIENDLY_LAST_MODIFIED
           headers = static_response[1]
           headers['Cache-Control'] = "public, max-age=#{lifetime_in_secs}"
           headers['Last-Modified'] = last_modified
+        else
+          headers = static_response[1]
+          headers.delete('Last-Modified')
         end
         static_response
       end
