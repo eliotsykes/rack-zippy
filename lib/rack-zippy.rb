@@ -52,6 +52,9 @@ module Rack
       CACHE_FRIENDLY_LAST_MODIFIED = 'Mon, 10 Jan 2005 10:00:00 GMT'.freeze
 
       FAVICON_PATH = '/favicon.ico'.freeze
+      PATH_INFO = 'PATH_INFO'.freeze
+      CACHE_CONTROL = 'Cache-Control'.freeze
+      LAST_MODIFIED = 'Last-Modified'.freeze
 
       def assert_path_valid(path)
         raise ArgumentError, BLANK_PATH_MESSAGE if path.blank?
@@ -67,7 +70,7 @@ module Rack
       end
 
       def illegal_path?(env)
-        path_info = env['PATH_INFO']
+        path_info = env[PATH_INFO]
         path_info =~ ILLEGAL_PATH_REGEX
       end
 
@@ -76,45 +79,24 @@ module Rack
       end
 
       def after_static_responds(env, static_response)
-        path = ::Rack::Utils.unescape(env['PATH_INFO'])
+        path = ::Rack::Utils.unescape(env[PATH_INFO])
+        headers = static_response[1]
         case path
         when ASSETS_SUBDIR_REGEX
           lifetime_in_secs = SECONDS_IN[:year]
           last_modified = CACHE_FRIENDLY_LAST_MODIFIED
-          headers = static_response[1]
-          headers['Cache-Control'] = "public, max-age=#{lifetime_in_secs}"
-          headers['Last-Modified'] = last_modified
+          headers[CACHE_CONTROL] = "public, max-age=#{lifetime_in_secs}"
+          headers[LAST_MODIFIED] = last_modified
         when FAVICON_PATH
           lifetime_in_secs = SECONDS_IN[:month]
           last_modified = CACHE_FRIENDLY_LAST_MODIFIED
-          headers = static_response[1]
-          headers['Cache-Control'] = "public, max-age=#{lifetime_in_secs}"
-          headers['Last-Modified'] = last_modified
+          headers[CACHE_CONTROL] = "public, max-age=#{lifetime_in_secs}"
+          headers[LAST_MODIFIED] = last_modified
         else
-          headers = static_response[1]
-          headers.delete('Last-Modified')
+          headers.delete(LAST_MODIFIED)
         end
         static_response
       end
-
-
-      # def cache_headers(path_info)
-        # case full_path_info
-        # when PRECOMPILED_ASSETS_SUBDIR_REGEX
-        #   lifetime_in_secs = SECONDS_IN[:year]
-        #   last_modified = CACHE_FRIENDLY_LAST_MODIFIED
-        # when '/favicon.ico'
-        #   lifetime_in_secs = SECONDS_IN[:month]
-        #   last_modified = CACHE_FRIENDLY_LAST_MODIFIED
-        # else
-        #   lifetime_in_secs = @max_age_fallback
-        # end
-        #
-        # headers = { 'Cache-Control' => "public, max-age=#{lifetime_in_secs}" }
-        # headers['Last-Modified'] = last_modified if last_modified
-        #
-        # return headers
-      # end
 
     end
   end
