@@ -85,16 +85,19 @@ module Rack
         when ASSETS_SUBDIR_REGEX
           lifetime_in_secs = SECONDS_IN[:year]
           last_modified = CACHE_FRIENDLY_LAST_MODIFIED
-          headers[CACHE_CONTROL] = "public, max-age=#{lifetime_in_secs}"
-          headers[LAST_MODIFIED] = last_modified
         when FAVICON_PATH
           lifetime_in_secs = SECONDS_IN[:month]
           last_modified = CACHE_FRIENDLY_LAST_MODIFIED
-          headers[CACHE_CONTROL] = "public, max-age=#{lifetime_in_secs}"
+        end
+
+        headers[CACHE_CONTROL] = "public, max-age=#{lifetime_in_secs}" if lifetime_in_secs
+
+        if last_modified
           headers[LAST_MODIFIED] = last_modified
         else
           headers.delete(LAST_MODIFIED)
         end
+
         static_response
       end
 
