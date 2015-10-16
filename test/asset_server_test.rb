@@ -168,6 +168,7 @@ module Rack
         get '/assets/rails.png'
         assert_response_ok
         assert_nil last_response.headers['vary']
+        assert_nil last_response.headers['content-encoding']
       end
 
       def test_responds_not_found_if_path_contains_hidden_dir
@@ -258,6 +259,7 @@ module Rack
 
         get '/thanks.html'
         assert_equal "public, max-age=1234", last_response.headers['cache-control']
+        assert_last_modified nil
       end
 
       private
