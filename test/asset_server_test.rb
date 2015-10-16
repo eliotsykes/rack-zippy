@@ -262,6 +262,38 @@ module Rack
         assert_last_modified nil
       end
 
+      def test_request_for_existing_file_with_unknown_extension_is_passed_onto_underlying_app
+        flunk
+      end
+
+      def test_request_for_file_with_configured_extension_successful
+        # Rack::Zippy.static_extensions << 'csv'
+        # assert ServeableFile.has_static_extension?('/static-file.csv'),
+        #        "Should handle files with user configured extensions"
+        flunk
+      end
+
+      def test_default_extensions_includes_fonts
+        # font_extensions = ['woff', 'woff2', 'ttf', 'eot', 'otf']
+        # font_extensions.each do |extension|
+        #   assert ServeableFile.has_static_extension?("/comic-sans.#{extension}"),
+        #          "'#{extension}' font extension not recognized"
+        flunk
+      end
+
+      def test_default_extensions_includes_flash
+        # assert ServeableFile.has_static_extension?('/splash-page-like-its-1999.swf'),
+        #        "Should handle flash .swf files"
+        flunk
+      end
+
+      def test_extensions_handles_non_lowercase_chars
+        # ['pNG', 'JPEG', 'HTML', 'HtM', 'GIF', 'Ico'].each do |extension|
+        #   assert ServeableFile.has_static_extension?("/some-asset.#{extension}")
+        # end
+        flunk
+      end
+
       private
 
       def app
