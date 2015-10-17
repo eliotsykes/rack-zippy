@@ -31,10 +31,7 @@ module Rack
         path_info = env[PATH_INFO]
         return not_found_response if illegal_path?(path_info)
 
-        extension = extension(path_info)
-        try_default_extension = extension.nil?
-
-        if try_default_extension || static_extension?(extension)
+        if try_static?(path_info)
           static_response = static_middleware.call(env)
         end
 
@@ -85,6 +82,12 @@ module Rack
 
       def not_found_response
         [404, {}, ['Not Found']]
+      end
+
+      def try_static?(path)
+        extension = extension(path)
+        try_default_extension = extension.nil?
+        try_default_extension || static_extension?(extension)
       end
 
       def extension(path)
