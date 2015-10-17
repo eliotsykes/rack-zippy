@@ -284,8 +284,17 @@ module Rack
       end
 
       def test_default_extensions_includes_flash
-        # assert ServeableFile.has_static_extension?('/splash-page-like-its-1999.swf'),
-        #        "Should handle flash .swf files"
+        assert_includes(Rack::Zippy.static_extensions, 'swf')
+      end
+
+      def test_responds_with_file_with_uppercase_chars_in_extension
+        get '/assets/loading.GiF'
+        assert_response_ok
+        assert_content_type 'image/gif'
+        assert_content_length 'public/assets/loading.GiF'
+      end
+
+      def test_extension_case_must_match
         flunk
       end
 
