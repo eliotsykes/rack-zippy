@@ -7,7 +7,6 @@ module Rack
 
       def setup
         ensure_correct_working_directory
-        enter_rails_env
         @original_extensions = Rack::Zippy.static_extensions.dup
       end
 
