@@ -269,10 +269,11 @@ module Rack
       end
 
       def test_request_for_file_with_configured_extension_successful
-        # Rack::Zippy.static_extensions << 'csv'
-        # assert ServeableFile.has_static_extension?('/static-file.csv'),
-        #        "Should handle files with user configured extensions"
-        flunk
+        Rack::Zippy.static_extensions << 'csv'
+        get '/report.csv'
+        assert_response_ok
+        assert_content_type 'text/csv'
+        assert_content_length 'public/report.csv'
       end
 
       def test_default_extensions_includes_fonts
