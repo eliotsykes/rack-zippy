@@ -277,11 +277,10 @@ module Rack
       end
 
       def test_default_extensions_includes_fonts
-        # font_extensions = ['woff', 'woff2', 'ttf', 'eot', 'otf']
-        # font_extensions.each do |extension|
-        #   assert ServeableFile.has_static_extension?("/comic-sans.#{extension}"),
-        #          "'#{extension}' font extension not recognized"
-        flunk
+        font_extensions = ['woff', 'woff2', 'ttf', 'eot', 'otf']
+        font_extensions.each do |ext|
+          assert_includes(Rack::Zippy.static_extensions, ext)
+        end
       end
 
       def test_default_extensions_includes_flash
