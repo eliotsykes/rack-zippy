@@ -294,17 +294,6 @@ module Rack
         assert_content_length 'public/assets/loading.GiF'
       end
 
-      def test_extension_case_must_match
-        flunk
-      end
-
-      def test_extensions_handles_non_lowercase_chars
-        # ['pNG', 'JPEG', 'HTML', 'HtM', 'GIF', 'Ico'].each do |extension|
-        #   assert ServeableFile.has_static_extension?("/some-asset.#{extension}")
-        # end
-        flunk
-      end
-
       private
 
       def app
