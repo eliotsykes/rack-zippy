@@ -31,7 +31,10 @@ module Rack
         path_info = env[PATH_INFO]
         return not_found_response if illegal_path?(path_info)
 
-        if static_extension?(path_info)
+        extension = extension(path_info)
+        try_default_extension = extension.nil?
+
+        if try_default_extension || static_extension?(extension)
           static_response = static_middleware.call(env)
         end
 
@@ -84,8 +87,14 @@ module Rack
         [404, {}, ['Not Found']]
       end
 
-      def static_extension?(path)
-        Rack::Zippy.static_extensions.include? ::File.extname(path).slice(1..-1).to_s.downcase
+      def extension(path)
+        ext = ::File.extname(path).slice(1..-1)
+        ext.downcase! if ext
+        ext
+      end
+
+      def static_extension?(extension)
+        Rack::Zippy.static_extensions.include? extension
       end
 
       def after_static_responds(env, static_response)
