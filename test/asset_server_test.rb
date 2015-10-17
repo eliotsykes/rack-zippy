@@ -8,13 +8,13 @@ module Rack
       def setup
         ensure_correct_working_directory
         enter_rails_env
-        ::Rails.public_path = Pathname.new(asset_root)
-        # ::Rails.configuration.assets.compile = false
+        @original_extensions = Rack::Zippy.static_extensions.dup
       end
 
       def teardown
         revert_to_original_working_directory
         @app = nil
+        Rack::Zippy.static_extensions = @original_extensions
       end
 
       BLANK_PATHS = [nil, '', '   ']
@@ -263,7 +263,9 @@ module Rack
       end
 
       def test_request_for_existing_file_with_unknown_extension_is_passed_onto_underlying_app
-        flunk
+        assert Rack::Zippy.static_extensions.delete("txt")
+        get '/robots.txt'
+        assert_underlying_app_responded
       end
 
       def test_request_for_file_with_configured_extension_successful

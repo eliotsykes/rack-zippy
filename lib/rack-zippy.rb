@@ -1,8 +1,12 @@
 require 'rack-zippy/version'
+require 'rack-zippy/configuration'
 require 'action_controller'
 
 module Rack
   module Zippy
+    extend Configuration
+
+    define_setting :static_extensions, %w(css js html htm txt ico png jpg jpeg gif pdf svg zip gz eps psd ai woff woff2 ttf eot otf swf)
 
     ASSETS_SUBDIR_REGEX = /\A\/assets(?:\/|\z)/
 
@@ -24,9 +28,12 @@ module Rack
       end
 
       def call(env)
-        return not_found_response if illegal_path?(env)
+        path_info = env[PATH_INFO]
+        return not_found_response if illegal_path?(path_info)
 
-        static_response = static_middleware.call(env)
+        if static_extension?(path_info)
+          static_response = static_middleware.call(env)
+        end
 
         if static_response
           after_static_responds(env, static_response)
@@ -69,13 +76,16 @@ module Rack
         max_age_fallback.is_a?(Symbol) ? SECONDS_IN.fetch(max_age_fallback) : max_age_fallback
       end
 
-      def illegal_path?(env)
-        path_info = env[PATH_INFO]
-        path_info =~ ILLEGAL_PATH_REGEX
+      def illegal_path?(path)
+        path =~ ILLEGAL_PATH_REGEX
       end
 
       def not_found_response
         [404, {}, ['Not Found']]
+      end
+
+      def static_extension?(path)
+        Rack::Zippy.static_extensions.include? ::File.extname(path).slice(1..-1).to_s.downcase
       end
 
       def after_static_responds(env, static_response)
