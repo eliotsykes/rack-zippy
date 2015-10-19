@@ -19,4 +19,5 @@ Gem::Specification.new do |gem|
   gem.require_paths = ["lib"]
 
   gem.add_dependency 'actionpack', '~> 4.2.4'
+  gem.add_development_dependency 'minitest', '~> 5.8.1'
 end

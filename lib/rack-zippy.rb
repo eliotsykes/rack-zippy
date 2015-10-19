@@ -1,5 +1,6 @@
 require 'rack-zippy/version'
 require 'rack-zippy/configuration'
+require 'rack-zippy/railtie' if defined?(Rails)
 require 'action_controller'
 
 module Rack

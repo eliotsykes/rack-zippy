@@ -20,7 +20,7 @@ module Rack
 
       BLANK_PATHS.each do |blank_path|
         test "initializer prevents blank path: #{blank_path.inspect}" do
-          assert_raise ArgumentError do
+          assert_raises ArgumentError do
             AssetServer.new(create_rack_app, blank_path)
           end
         end

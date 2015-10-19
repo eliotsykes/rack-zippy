@@ -3,10 +3,13 @@ require 'bundler/setup'
 
 Bundler.require :default, :development
 
-require 'test/unit'
+require 'minitest/autorun'
 require 'rack/test'
+require 'active_support/testing/declarative'
 
-class TestCase < ::Test::Unit::TestCase
+
+class TestCase < ::Minitest::Test
+  extend ActiveSupport::Testing::Declarative
 
   DURATIONS_IN_SECS = {:year => 31536000, :month => 2678400, :day => 86400}.freeze
 
