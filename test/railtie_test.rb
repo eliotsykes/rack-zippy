@@ -22,9 +22,9 @@ module Rack
         Rack::Zippy::Railtie.skip_version_check = false
       end
 
-      def test_no_remove_zippy_recommendation_for_rails_versions_below_4_2
+      def test_upgrade_rails_or_downgrade_zippy_recommendation_for_rails_versions_below_4_2
         with_rails_version('4.1.99') do
-          assert_silent { Rack::Zippy::Railtie.version_check }
+          assert_output("[rack-zippy] This version of rack-zippy does not support Rails. Your choices include: 1) [RECOMMENDED] Upgrade to Rails 4.2 or above and use Rails' built-in ActionDispatch::Static middleware to serve gzipped files. or 2) Specify an earlier version of rack-zippy (~> '3.0.1') in your Gemfile that does support Rails\n") { Rack::Zippy::Railtie.version_check }
         end
       end
 
