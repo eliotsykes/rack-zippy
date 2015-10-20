@@ -1,51 +1,21 @@
+# Hey fellow Rails developers, please read!
+
+**Want to use rack-zippy with a Rails v4.2 or greater app?**  
+Its recommended you don't! Rails 4.2+ now supports serving gzipped files directly so there's no need for rack-zippy in Rails 4.2+ apps.
+
+**Want to use rack-zippy with a Rails v4.1 or less app?**  
+You'll need to use v3.0 of rack-zippy, see the README here: https://github.com/eliotsykes/rack-zippy/tree/v3.0.1
+
 # rack-zippy
 
-rack-zippy is a Rack middleware for serving static gzipped assets precompiled by the Rails (4.1 and earlier) asset pipeline into the public/assets directory. Use it on Heroku if you want to serve the precompiled gzipped assets to gzip-capable clients with sensible caching headers.
+rack-zippy v4+ is a Rack middleware for serving .gz files in Rack apps that are **not** Rails 4.2+ apps. (If you need to use rack-zippy in a Rails <= 4.1 app, then use v3.0 of rack-zippy, see README here: https://github.com/eliotsykes/rack-zippy/tree/v3.0.1)
 
-## IMPORTANT NOTES for Rails 4.2 applications
-- Rails 4.2 does *not* generate .gz assets when using a recent version of Sprockets
-- .gz asset generation was removed in Sprockets 3.0 (see discussion here https://github.com/rails/sprockets/issues/26).
-- Ensure that .gz files are generated during `rake assets:precompile`
-- It might help using an earlier version of Sprockets, e.g. `gem "sprockets", "~> 2.12.4"` (awaiting confirmation - please tell me if you've found this works)
-- Rails 4.2 now contains middleware to serve .gz files **if** they are generated, so as long as the .gz files are generated, you probably will not need rack-zippy. Check the headers and responses on your assets served in your production environment.
-
-By default, Heroku + Rails 4.1 and earlier will not serve .gz assets. These .gz assets **used** to be generated at deploy time in Rails 4.1 and earlier. However in Rails 4.2 they are **not** generated (see notes on Rails 4.2 above).
-
-rack-zippy replaces the `ActionDispatch::Static` middleware used by Rails, which is not capable of serving the gzipped assets created by
-the `rake assets:precompile` task. rack-zippy will serve non-gzipped assets where they are not available or not supported by the
-requesting client.
-
-rack-zippy (since 2.0.0) has the same **convenient directory request handling** provided by `ActionDispatch::Static`, which means you can take advantage of this in any rack app:
+rack-zippy has convenient directory request handling:
 
 - Requests for `/` and `/index` respond with `public/index.html` if present
 - Requests for `/foo/` and `/foo` respond with first file present out of `public/foo.html`, `public/foo/index.html` (Same behaviour for subdirectories)
 
-Watch the [Web Dev Break podcast on rack-zippy](http://www.webdevbreak.com/specials/rack-zippy "Faster, friendlier assets with rack-zippy") to see how you can check if your app
-is currently serving uncompressed assets and how quick it is to setup rack-zippy:
-
-[ ![Faster, friendlier assets with rack-zippy](/video-player.png "Faster, friendlier assets with rack-zippy") ](http://www.webdevbreak.com/specials/rack-zippy "Faster, friendlier assets with rack-zippy")
-
-## Installation in Rails app
-
-Add this line to your application's Gemfile:
-
-    gem 'rack-zippy'
-
-And then execute:
-
-    $ bundle
-
-In `config/environments/production.rb`, set `config.serve_static_assets` to `true`:
-
-    # Puts ActionDispatch::Static in middleware stack which we are going to replace with
-    # Rack::Zippy::AssetServer
-    config.serve_static_assets = true
-
-Create the file `config/initializers/rack_zippy.rb` and put this line in it:
-
-    Rails.application.config.middleware.swap(ActionDispatch::Static, Rack::Zippy::AssetServer)
-
-Now run `rake middleware` at the command line and make sure that `Rack::Zippy::AssetServer` is near the top of the outputted list. ActionDispatch::Static should not be in the list. Nicely done, rack-zippy is now installed in your app.
+rack-zippy decorates actionpack's `ActionDispatch::Static` middleware for non-Rails Rack apps to provide rack-zippy's own choice of caching headers and whitelisting of permitted static file extensions. (As an alternative to rack-zippy, you can use actionpack's `ActionDispatch::Static` directly without rack-zippy.)
 
 ## Installation in Rack app (that isn’t a Rails app)
 
@@ -78,17 +48,17 @@ application's public/ directory and will respond with sensible caching headers.
 
 `max_age_fallback`, is an integer value in seconds that should be used as the max_age fallback for files served by rack-zippy that live **outside** the `/assets` subdirectory *and* aren't `/favicon.ico`.
 
-A typical use for `max_age_fallback` is to define how long the cache lifetime for static HTML files served by rack-zippy should be. For one of my sites I have this set to 10 minutes:
+A typical use for `max_age_fallback` is to define how long the cache lifetime for static HTML files served by rack-zippy should be. For one of my sites I have this set to 15 minutes:
 
 ```ruby
-max_age_in_secs = 10*60 # 10 mins = 600 secs
+max_age_in_secs = 15*60 # 15 mins = 900 secs
 use Rack::Zippy::AssetServer, asset_root, max_age_fallback: max_age_in_secs
 ```
 
 Any files given the `max_age_fallback` would have the following `Cache-Control` header:
 
 ```
-Cache-Control: public, max-age=600
+Cache-Control: public, max-age=900
 ```
 
 ### Configuration
@@ -103,23 +73,26 @@ You can modify this list to support other extensions by appending the lowercased
 ```ruby
 Rack::Zippy.configure do |config|
   # Add support for the given extensions:
-  config.static_extensions.push('csv', 'xls', 'rtf', ...EXTENSIONS TO ADD...)
+  config.static_extensions.push('map', 'csv', 'xls', 'rtf', ...EXTENSIONS TO ADD...)
 end
 ```
 
+It is not recommended, however if you use rack-zippy 4.0+ with a Rails 4.2+ app, you can skip the rack-zippy rails version check and log output. Put the following in an initializer:
+
+```ruby
+# config/initializers/zippy.rb
+Rack::Zippy::Railtie.skip_version_check = true
+```
+
+
 ## Troubleshooting
-
-##### 'assert_index': No such middleware to insert before: ActionDispatch::Static (RuntimeError)
-
-Check your environment (in config/environments/) does not have `serve_static_assets` set to false:
-
-    config.serve_static_assets = false # Oops! Should be set to true for rack-zippy
 
 ##### NameError: uninitialized constant Rack::Zippy
 
 - Check `Gemfile` doesn't limit rack-zippy to a subset of environment groups
 - Run `bundle install`
 - Check `Gemfile.lock` contains an entry for rack-zippy
+- Ensure `require 'rack-zippy'` is present near the top of `config.ru`
 
 
 ## Contributing
@@ -157,11 +130,14 @@ Cleanup time! When you’re finished testing, delete the local override and set 
 #### How to Run a Single Test
 
 ```bash
-# Single test method
-ruby -Ilib:test test/taken_from_rails_static_test.rb --name test_serves_static_file_with_ampersand_in_filename
-
 # Single test file
-ruby -Ilib:test test/taken_from_rails_static_test.rb
+ruby -Ilib:test test/assert_server_test.rb
+
+# Single test method
+ruby -Ilib:test test/assert_server_test.rb --name test_serves_static_file_as_directory
+
+# Test methods matching a regex
+ruby -Ilib:test test/assert_server_test.rb --name /serves_static/
 ```
 
 ## Contributors
