@@ -1,4 +1,4 @@
-## 4.0.0.pre / yyyy-mm-dd
+## 4.0.0 / 2015-10-20
 - Rack Zippy continues to support non-Rails Rack apps, though Rails support has ended in rack-zippy 4.0+. Rails 4.2+ now supports serving gzipped files directly. Configure your Rails 4.2+ app to use the `ActionDispatch::Static` middleware. If you absolutely need rack-zippy for your Rails app or can't upgrade to Rails 4.2+, try using an earlier rack-zippy version: `~> 3.0.1`
 - New dependency on actionpack gem. Rack Zippy decorates the `ActionDispatch::Static` middleware for non-Rails Rack apps to provide Rack Zippy's own choice of caching headers and whitelisting of permitted static file extensions.
 
